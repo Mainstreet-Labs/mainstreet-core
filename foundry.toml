@@ -6,6 +6,7 @@ solc = "0.8.20"
 evm_version = "cancun"
 fs_permissions = [{ access = "read-write", path = "./deployments/"}]
 bytecode_hash = "none"
+optimization_runs = 200
 
 [etherscan]
 # This maps chain ID directly to the API key and URL
