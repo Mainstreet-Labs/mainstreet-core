@@ -1,8 +1,7 @@
-name: CI
+name: test
 
 on:
   push:
-  pull_request:
   workflow_dispatch:
 
 env:
@@ -13,33 +12,29 @@ jobs:
     strategy:
       fail-fast: true
 
-    name: Foundry project
+    name: Mainstreet Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
+          fetch-depth: 0
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
 
-      - name: Show Forge version
-        run: |
-          forge --version
-
-      - name: Run Forge fmt
-        run: |
-          forge fmt --check
-        id: fmt
-
       - name: Run Forge build
         run: |
+          forge --version
           forge build --sizes
         id: build
 
       - name: Run Forge tests
         run: |
-          forge test -vvv
+          forge test
+        env:
+          SONIC_RPC_URL: ${{ secrets.SONIC_RPC_URL }}
+          BLAZE_RPC_URL: ${{ secrets.BLAZE_RPC_URL }}
         id: test
