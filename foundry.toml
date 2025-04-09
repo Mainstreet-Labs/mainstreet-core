@@ -1,0 +1,13 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc = "0.8.20"
+evm_version = "cancun"
+fs_permissions = [{ access = "read-write", path = "./deployments/"}]
+bytecode_hash = "none"
+
+[etherscan]
+# This maps chain ID directly to the API key and URL
+57054 = { key = "${ETHERSCAN_API_KEY}", url = "https://api-testnet.sonicscan.org/api" }
+146 = { key = "${ETHERSCAN_API_KEY}", url = "https://api.sonicscan.org/api" }
