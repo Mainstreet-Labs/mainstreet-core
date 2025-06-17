@@ -1,16 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import {UUPSUpgradeable} from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
-import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
-import {WrappedMainstreetUSD} from "../../src/wrapped/WrappedMainstreetUSD.sol";
-import {BaseSetup} from "../BaseSetup.sol";
-import {IMintable} from "../interfaces/IMintable.sol";
-import "../utils/Constants.sol";
+import {WrappedMainstreetUSD} from "../../../src/wrapped/WrappedMainstreetUSD.sol";
+import {BaseSetup} from "./utils/BaseSetup.sol";
+import {IMintable} from "../../interfaces/IMintable.sol";
+import "../../utils/Constants.sol";
 
 /**
  * @title WrappedmsUSDTest

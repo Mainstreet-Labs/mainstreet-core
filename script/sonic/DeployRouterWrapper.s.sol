@@ -13,7 +13,7 @@ import "../../test/utils/Constants.sol";
 /**
  * @title DeployRouterWrapper
  * @author Mainstreet Labs
- * @notice This script deploys a static price oracle
+ * @notice This script deploys a Wrapper for Shadow protocol operations.
  */
 contract DeployRouterWrapper is Script {
     uint256 public DEPLOYER_PRIVATE_KEY = vm.envUint("DEPLOYER_PRIVATE_KEY");

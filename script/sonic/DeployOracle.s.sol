@@ -28,7 +28,7 @@ contract DeployOracle is Script {
     function run() external {
         vm.startBroadcast(DEPLOYER_PRIVATE_KEY);
 
-        // Deploy mock static oracle
+        // Deploy static oracle
         new StaticPriceOracle(TOKEN, 1 * 1e18, 18);
 
         vm.stopBroadcast();

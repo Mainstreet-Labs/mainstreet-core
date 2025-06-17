@@ -14,7 +14,7 @@ interface ImsUSD is IERC20 {
     event SupplyLimitUpdated(uint256 indexed newSupplyLimit);
     /// @dev This event is emitted when the rebase tax is updated.
     event TaxRateUpdated(uint256 indexed newTaxRate);
-
+    
     /// @dev Error emitted when totalSupply exceeds `supplyLimit`.
     error SupplyLimitExceeded();
     /// @dev Zero address not allowed.

@@ -2,12 +2,12 @@
 pragma solidity ^0.8.19;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {BaseSetup} from "../BaseSetup.sol";
-import {CustodianManager} from "../../src/CustodianManager.sol";
-import {IMintable} from "../interfaces/IMintable.sol";
-import {ICustodianManager} from "../../src/interfaces/ICustodianManager.sol";
-import {MockOracle} from "../mock/MockOracle.sol";
-import "../utils/Constants.sol";
+import {BaseSetup} from "./utils/BaseSetup.sol";
+import {CustodianManager} from "../../../src/CustodianManager.sol";
+import {IMintable} from "../../interfaces/IMintable.sol";
+import {ICustodianManager} from "../../../src/interfaces/ICustodianManager.sol";
+import {MockOracle} from "../../mock/MockOracle.sol";
+import "../../utils/Constants.sol";
 
 /**
  * @title CustodianManagerTest
@@ -15,7 +15,7 @@ import "../utils/Constants.sol";
  */
 contract CustodianManagerTest is BaseSetup {
     function setUp() public override {
-        vm.createSelectFork(vm.envString("SONIC_RPC_URL"));
+        vm.createSelectFork(vm.envString("SONIC_RPC_URL"), 23858599);
         super.setUp();
 
         vm.startPrank(owner);

@@ -2,9 +2,9 @@
 pragma solidity ^0.8.19;
 
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import {msUSD} from "../../src/msUSD.sol";
-import {ImsUSD} from "../../src/interfaces/ImsUSD.sol";
-import {BaseSetup} from "../BaseSetup.sol";
+import {msUSD} from "../../../src/msUSD.sol";
+import {ImsUSD} from "../../../src/interfaces/ImsUSD.sol";
+import {BaseSetup} from "./utils/BaseSetup.sol";
 
 /**
  * @title msUSDRebaseTest

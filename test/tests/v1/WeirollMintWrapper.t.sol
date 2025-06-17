@@ -4,11 +4,11 @@ pragma solidity ^0.8.19;
 import {Test} from "forge-std/Test.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {msUSD} from "../../src/msUSD.sol";
-import {MainstreetMinter} from "../../src/MainstreetMinter.sol";
-import {WeirollMintWrapper} from "../../src/helpers/WeirollMintWrapper.sol";
-import {IMintable} from "../interfaces/IMintable.sol";
-import "../utils/Constants.sol";
+import {msUSD} from "../../../src/msUSD.sol";
+import {MainstreetMinter} from "../../../src/MainstreetMinter.sol";
+import {WeirollMintWrapper} from "../../../src/helpers/WeirollMintWrapper.sol";
+import {IMintable} from "../../interfaces/IMintable.sol";
+import "../../utils/Constants.sol";
 
 /**
  * @title WeirollMintWrapperTest

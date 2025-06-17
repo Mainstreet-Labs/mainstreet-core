@@ -8,20 +8,12 @@ import "../../test/utils/Constants.sol";
 /**
     @dev To run: 
     forge script \
-    script/sonic/UpgradeMainstreetMinter.s.sol:UpgradeMainstreetMinter \
+    script/testnet/UpgradeMainstreetMinter.s.sol:UpgradeMainstreetMinter \
     --broadcast \
     --verify \
-    --verifier-url https://api.sonicscan.org/api \
-    --chain-id 146 \
+    --verifier-url https://api-testnet.sonicscan.org/api \
+    --chain-id 57054 \
     -vvvv
-
-    @dev To verify implementation:
-    forge verify-contract \
-    <CONTRACT_ADDRESS> \
-    src/MainstreetMinter.sol:MainstreetMinter \
-    --chain-id 146 \
-    --watch \
-    --constructor-args $(cast abi-encode "constructor(address)" 0xc2896AA335BA18556c09d6155Fac7D76A4578c5A)
  */
 
 /**
@@ -31,14 +23,13 @@ import "../../test/utils/Constants.sol";
  */
 contract UpgradeMainstreetMinter is Script {
     uint256 public DEPLOYER_PRIVATE_KEY = vm.envUint("DEPLOYER_PRIVATE_KEY");
-    string public SONIC_RPC_URL = vm.envString("SONIC_RPC_URL");
+    string public BLAZE_RPC_URL = vm.envString("BLAZE_RPC_URL");
     
-    MainstreetMinter internal constant MS_MINTER = MainstreetMinter(0xb1E423c251E989bd4e49228eF55aC4747D63F54D); /// @dev assign
-
-    address internal constant MSUSD = 0xE5Fb2Ed6832deF99ddE57C0b9d9A56537C89121D; /// @dev assign
+    MainstreetMinter internal constant MS_MINTER = MainstreetMinter(0xE32E43266c875Bc67AE4C56F2291Acb3Bcea2aA5); /// @dev assign
+    address internal constant MSUSD = 0x979eF4945Ed825140cdD1C325BcebdF80692f46A; /// @dev assign
 
     function setUp() public {
-        vm.createSelectFork(SONIC_RPC_URL);
+        vm.createSelectFork(BLAZE_RPC_URL);
     }
 
     function run() public {

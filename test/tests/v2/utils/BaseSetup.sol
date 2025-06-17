@@ -1,22 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {Test} from "forge-std/Test.sol";
-
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {MainstreetMinter} from "../../../../src/MainstreetMinter.sol";
+import {MockOracle} from "../../../mock/MockOracle.sol";
+import {MockToken} from "../../../mock/MockToken.sol";
+import {msUSDV2} from "../../../../src/v2/msUSDV2.sol";
+import {StakedmsUSD} from "../../../../src/v2/StakedmsUSD.sol";
+import {FeeSilo} from "../../../../src/FeeSilo.sol";
+import {msUSDSilo} from "../../../../src/v2/msUSDSilo.sol";
+import {CustodianManager} from "../../../../src/CustodianManager.sol";
+import {ImsUSDV2} from "../../../../src/interfaces/ImsUSDV2.sol";
+import {Actors} from "../../../utils/Actors.sol";
+import "../../../utils/Constants.sol";
 
-import {MainstreetMinter} from "../src/MainstreetMinter.sol";
-import {MockOracle} from "./mock/MockOracle.sol";
-import {MockToken} from "./mock/MockToken.sol";
-import {msUSD} from "../src/msUSD.sol";
-import {FeeSilo} from "../src/FeeSilo.sol";
-import {CustodianManager} from "../src/CustodianManager.sol";
-import {ImsUSD} from "../src/interfaces/ImsUSD.sol";
-import {Utils} from "./utils/Utils.sol";
-
-contract BaseSetup is Test {
-    Utils internal utils;
-    msUSD internal msUSDToken;
+contract BaseSetupV2 is Actors {
+    msUSDV2 internal msUSDToken;
+    StakedmsUSD internal smsUSD;
+    msUSDSilo internal silo;
     FeeSilo internal feeSilo;
     CustodianManager internal custodian;
     MockToken internal FRAX;
@@ -27,37 +28,7 @@ contract BaseSetup is Test {
     MockOracle internal USDTTokenOracle;
     MainstreetMinter internal msMinter;
 
-    uint256 internal constant ownerPrivateKey = 0xA11CE;
-    uint256 internal constant minterPrivateKey = 0xB44DE;
-    uint256 internal constant adminPrivateKey = 0x1DE;
-    uint256 internal constant whitelisterPrivateKey = 0x1DEA;
-    uint256 internal constant bobPrivateKey = 0x1DEA2;
-    uint256 internal constant alicePrivateKey = 0x1DBA2;
-    uint256 internal constant rebaseManagerPrivateKey = 0x1DB11;
-    uint256 internal constant mainCustodianPrivateKey = 0x1AB02;
-
-    address internal owner;
-    address internal admin;
-    address internal whitelister;
-    address internal bob;
-    address internal alice;
-    address internal mainCustodian;
-    address internal rebaseManager;
-
-    /// @notice packs r, s, v into signature bytes
-    function _packRsv(bytes32 r, bytes32 s, uint8 v) internal pure returns (bytes memory) {
-        bytes memory sig = new bytes(65);
-        assembly {
-            mstore(add(sig, 32), r)
-            mstore(add(sig, 64), s)
-            mstore8(add(sig, 96), v)
-        }
-        return sig;
-    }
-
     function setUp() public virtual {
-        utils = new Utils();
-
         FRAX = new MockToken("FRAX STABLE", "FRAX", 18, msg.sender);
         FRAXOracle = new MockOracle(address(FRAX), 1e18, 18);
 
@@ -69,29 +40,45 @@ contract BaseSetup is Test {
 
         _createAddresses();
 
-        vm.label(owner, "owner");
-        vm.label(admin, "admin");
-        vm.label(whitelister, "whitelister");
-        vm.label(bob, "bob");
-        vm.label(alice, "alice");
-
         address[] memory distributors = new address[](2);
         distributors[0] = address(2);
-        distributors[1] = address(3);
 
         uint256[] memory ratios = new uint256[](2);
         ratios[0] = 1;
-        ratios[1] = 1;
 
         // ~ Deploy Contracts ~
 
+        // Deploy msUSD
         ERC1967Proxy msUSDTokenProxy = new ERC1967Proxy(
-            address(new msUSD()), abi.encodeWithSelector(msUSD.initialize.selector, owner, rebaseManager, 0.1e18)
+            address(new msUSDV2(SONIC_LZ_ENDPOINT_V1)),
+            abi.encodeWithSelector(
+                msUSDV2.initialize.selector,
+                owner,
+                "msUSD", 
+                "msUSD"
+            )
         );
-        msUSDToken = msUSD(address(msUSDTokenProxy));
+        msUSDToken = msUSDV2(address(msUSDTokenProxy));
 
+        // Deploy StakedmsUSD
+        ERC1967Proxy StakedmsUSDProxy = new ERC1967Proxy(
+            address(new StakedmsUSD()),
+            abi.encodeWithSelector(
+                StakedmsUSD.initialize.selector,
+                address(msUSDToken),
+                admin, 
+                owner
+            )
+        );
+        smsUSD = StakedmsUSD(address(StakedmsUSDProxy));
+
+        // Deploy Silo
+        silo = new msUSDSilo(address(smsUSD), address(msUSDToken));
+
+        // Deploy feeSilo
         feeSilo = new FeeSilo(owner, address(msUSDToken), distributors, ratios);
 
+        // Deploy Minter
         msMinter = new MainstreetMinter(address(msUSDToken));
         ERC1967Proxy mainstreetMintingProxy = new ERC1967Proxy(
             address(msMinter),
@@ -104,6 +91,7 @@ contract BaseSetup is Test {
         );
         msMinter = MainstreetMinter(payable(address(mainstreetMintingProxy)));
 
+        // Deploy Custodian
         custodian = new CustodianManager(address(msMinter));
         ERC1967Proxy custodianProxy = new ERC1967Proxy(
             address(custodian),
@@ -115,6 +103,11 @@ contract BaseSetup is Test {
 
         vm.startPrank(owner);
 
+        // set silos on smsUSD
+        smsUSD.setSilo(address(silo));
+        smsUSD.setFeeSilo(address(feeSilo));
+
+        // allow bob and alice to mint
         msMinter.modifyWhitelist(bob, true);
         msMinter.modifyWhitelist(alice, true);
 
@@ -136,20 +129,19 @@ contract BaseSetup is Test {
 
         // Set configs on msUSD
         msUSDToken.setMinter(address(msMinter));
-        msUSDToken.setFeeSilo(address(feeSilo));
+        msUSDToken.setStakedmsUSD(address(smsUSD));
         msUSDToken.setSupplyLimit(type(uint256).max);
 
         vm.stopPrank();
-    }
 
-    function _createAddresses() internal {
-        owner = vm.addr(ownerPrivateKey);
-        admin = vm.addr(adminPrivateKey);
-        whitelister = vm.addr(whitelisterPrivateKey);
-        bob = vm.addr(bobPrivateKey);
-        alice = vm.addr(alicePrivateKey);
-        rebaseManager = vm.addr(rebaseManagerPrivateKey);
-        mainCustodian = vm.addr(mainCustodianPrivateKey);
+        vm.label(owner, "owner");
+        vm.label(admin, "admin");
+        vm.label(whitelister, "whitelister");
+        vm.label(bob, "bob");
+        vm.label(alice, "alice");
+        vm.label(address(silo), "silo");
+        vm.label(address(msUSDToken), "msUSD");
+        vm.label(address(smsUSD), "StakedmsUSD");
     }
 
     function _changeOraclePrice(address oracle, uint256 price) internal {

@@ -36,13 +36,12 @@ abstract contract DeploymentUtility is Script {
     
     /// @dev Ensures the deployment of the EmptyUUPS contract.
     function _ensureEmptyUUPSIsDeployed() internal {
-        _emptyUUPS = vm.computeCreate2Address(
-            _SALT,
-            hashInitCode(type(EmptyUUPS).creationCode, abi.encode(_deployer))
-        );
+        bytes32 initCodeHash = hashInitCode(type(EmptyUUPS).creationCode, abi.encode(_deployer));
+        _emptyUUPS = vm.computeCreate2Address(_SALT, initCodeHash);
 
         if (!_isDeployed(_emptyUUPS)) {
-            assert(address(new EmptyUUPS{salt: _SALT}(_deployer)) == _emptyUUPS);
+            EmptyUUPS emptyUUPS = new EmptyUUPS{salt: _SALT}(_deployer);
+            assert(address(emptyUUPS) == _emptyUUPS);
             console.log("Empty UUPS implementation contract deployed to %s", _emptyUUPS);
         }
     }
@@ -50,10 +49,9 @@ abstract contract DeploymentUtility is Script {
     /// @dev Computes the address and salt for a proxy corresponding to a specific contract. This is essential for
     ///      deploying or upgrading proxies in a deterministic manner.
     function _computeProxyAddress(string memory forContract) internal view returns (address proxyAddress, bytes32 salt) {
-        proxyAddress = vm.computeCreate2Address(
-            keccak256(abi.encodePacked(_SALT, forContract)),
-            hashInitCode(type(ERC1967Proxy).creationCode, abi.encode(_emptyUUPS, ""))
-        );
+        bytes32 initCodeHash = hashInitCode(type(ERC1967Proxy).creationCode, abi.encode(_emptyUUPS, ""));
+        salt = keccak256(abi.encodePacked(_SALT, forContract));
+        proxyAddress = vm.computeCreate2Address(salt, initCodeHash);
     }
 
     /// @dev Deploys or upgrades a UUPS proxy for a specified contract with a given implementation and initialization
@@ -75,6 +73,7 @@ abstract contract DeploymentUtility is Script {
             }
         } else {
             ERC1967Proxy proxy = new ERC1967Proxy{salt: salt}(_emptyUUPS, "");
+
             assert(proxyAddress == address(proxy));
             UUPSUpgradeable(address(proxy)).upgradeToAndCall(implementation, data);
             console.log("%s proxy deployed to %s", forContract, proxyAddress);

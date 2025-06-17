@@ -10,20 +10,14 @@ import "../../test/utils/Constants.sol";
 /**
  * @title RebaseWithDelta
  * @author Mainstreet Labs
- * @notice This script updates the supply limit on the blaze msUSD contract.
+ * @notice This script rebases msUSD on Blaze Testnet
  */
 contract RebaseWithDelta is Script {
     uint256 public DEPLOYER_PRIVATE_KEY = vm.envUint("DEPLOYER_PRIVATE_KEY");
     string public BLAZE_RPC_URL = vm.envString("BLAZE_RPC_URL");
     
     msUSD public msUSDToken = msUSD(0x12231E7FD7164613b911BBA5743210dAfF594482); /// @dev
-    uint256 public delta = 10 * 1e18; /// @dev
-
-    // rebaseIndex = 1.258222814739320222
-    // new rebaseIndex = 1.345490663356840029
-    // current msUSD totalSupply = 108.134567999999999990
-    // post rebase totalSupply =   118.134567999999999906
-    // fee = 2.500000000000000000
+    uint256 public delta = 20 * 1e18; /// @dev
 
     function setUp() public {
         vm.createSelectFork(BLAZE_RPC_URL);

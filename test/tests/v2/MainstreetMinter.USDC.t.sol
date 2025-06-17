@@ -2,23 +2,23 @@
 pragma solidity ^0.8.19;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {MainstreetMinter} from "../../src/MainstreetMinter.sol";
-import {CustodianManager} from "../../src/CustodianManager.sol";
-import {msUSD} from "../../src/msUSD.sol";
-import {ImsUSD} from "../../src/interfaces/ImsUSD.sol";
-import {IMainstreetMinter} from "../../src/interfaces/IMainstreetMinter.sol";
-import {IMintable} from "../interfaces/IMintable.sol";
-import {MockOracle} from "../mock/MockOracle.sol";
-import {BaseSetup} from "../BaseSetup.sol";
-import "../utils/Constants.sol";
+import {MainstreetMinter} from "../../../src/MainstreetMinter.sol";
+import {CustodianManager} from "../../../src/CustodianManager.sol";
+import {msUSD} from "../../../src/msUSD.sol";
+import {ImsUSD} from "../../../src/interfaces/ImsUSD.sol";
+import {IMainstreetMinter} from "../../../src/interfaces/IMainstreetMinter.sol";
+import {IMintable} from "../../interfaces/IMintable.sol";
+import {MockOracle} from "../../mock/MockOracle.sol";
+import {BaseSetupV2} from "./utils/BaseSetup.sol";
+import "../../utils/Constants.sol";
 
 /**
- * @title MainstreetMinterUSDCIntegrationTest
+ * @title MainstreetMinterUSDCIntegrationTestV2
  * @notice Unit Tests for MainstreetMinter contract interactions
  */
-contract MainstreetMinterUSDCIntegrationTest is BaseSetup {
+contract MainstreetMinterUSDCIntegrationTestV2 is BaseSetupV2 {
     function setUp() public override {
-        vm.createSelectFork(vm.envString("SONIC_RPC_URL"));
+        vm.createSelectFork(vm.envString("SONIC_RPC_URL"), 23858599);
         super.setUp();
 
         // Deploy oracle for SONIC_USDC

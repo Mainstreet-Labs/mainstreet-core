@@ -328,7 +328,7 @@ contract MainstreetMinter is IMainstreetMinter, OwnableUpgradeable, ReentrancyGu
 
     /**
      * @notice Updates the tax taken upon mints and redemptions.
-     * @dev It uses 1 basis point meaning a 1% tax would be 10 and a .1% tax is 1.
+     * @dev A 1% tax would be 10 and a .1% tax is 1.
      * @param newTax Tax we wish to assign.
      */
     function updateTax(uint16 newTax) external onlyOwner {
@@ -723,6 +723,18 @@ contract MainstreetMinter is IMainstreetMinter, OwnableUpgradeable, ReentrancyGu
      */
     function latestCoverageRatio() public view returns (uint256) {
         return uint256(coverageRatio.upperLookupRecent(clock()));
+    }
+
+    /**
+     * @notice Retrieves the coverage ratio that was active at a specific timestamp.
+     * @dev Uses the checkpoint system to find the coverage ratio value that was in effect
+     * at the given timestamp. If the timestamp is before any recorded checkpoints, returns 0.
+     * If the timestamp is after all checkpoints, returns the most recent coverage ratio.
+     * @param timestamp The point in time to query the coverage ratio for.
+     * @return ratio The coverage ratio (scaled by 1e18) that was active at the specified timestamp.
+     */
+    function getCoverageRatioAt(uint48 timestamp) external view returns (uint256 ratio) {
+        return uint256(coverageRatio.upperLookupRecent(timestamp));
     }
 
     /**

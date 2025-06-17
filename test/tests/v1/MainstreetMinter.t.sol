@@ -2,13 +2,13 @@
 pragma solidity ^0.8.19;
 
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import {MainstreetMinter} from "../../src/MainstreetMinter.sol";
-import {MockToken} from "../mock/MockToken.sol";
-import {msUSD} from "../../src/msUSD.sol";
-import {ImsUSD} from "../../src/interfaces/ImsUSD.sol";
-import {IMainstreetMinter} from "../../src/interfaces/IMainstreetMinter.sol";
-import {IErrors} from "../../src/interfaces/IErrors.sol";
-import {BaseSetup} from "../BaseSetup.sol";
+import {MainstreetMinter} from "../../../src/MainstreetMinter.sol";
+import {MockToken} from "../../mock/MockToken.sol";
+import {msUSD} from "../../../src/msUSD.sol";
+import {ImsUSD} from "../../../src/interfaces/ImsUSD.sol";
+import {IMainstreetMinter} from "../../../src/interfaces/IMainstreetMinter.sol";
+import {IErrors} from "../../../src/interfaces/IErrors.sol";
+import {BaseSetup} from "./utils/BaseSetup.sol";
 
 /**
  * @title MainstreetMinterTest
@@ -2104,6 +2104,58 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
 
         assertEq(requested, 0);
         assertEq(claimable, 0);
+    }
+
+    function testMinterGetCoverageRatioAt() public {
+        // Initial coverage ratio should be 1e18
+        assertEq(msMinter.getCoverageRatioAt(uint48(block.timestamp)), 1e18);
+        
+        // Test historical timestamp (before any checkpoints)
+        assertEq(msMinter.getCoverageRatioAt(uint48(block.timestamp - 1000)), 0);
+        
+        // Update coverage ratio and test
+        skip(10);
+        vm.prank(admin);
+        msMinter.setCoverageRatio(0.5e18); // 50%
+        
+        // Current timestamp should return new ratio
+        assertEq(msMinter.getCoverageRatioAt(uint48(block.timestamp)), 0.5e18);
+        
+        // Timestamp before the update should still return old ratio
+        assertEq(msMinter.getCoverageRatioAt(uint48(block.timestamp - 5)), 1e18);
+    }
+
+    function testMinterGetCoverageRatioAtMultipleUpdates() public {
+        uint48 timestamp1 = uint48(block.timestamp);
+        
+        // First update
+        skip(100);
+        uint48 timestamp2 = uint48(block.timestamp);
+        vm.prank(admin);
+        msMinter.setCoverageRatio(0.8e18); // 80%
+        
+        // Second update
+        skip(200);
+        uint48 timestamp3 = uint48(block.timestamp);
+        vm.prank(admin);
+        msMinter.setCoverageRatio(0.6e18); // 60%
+        
+        // Third update
+        skip(300);
+        uint48 timestamp4 = uint48(block.timestamp);
+        vm.prank(admin);
+        msMinter.setCoverageRatio(1e18); // 100%
+        
+        // Test all historical points
+        assertEq(msMinter.getCoverageRatioAt(timestamp1), 1e18);     // Initial
+        assertEq(msMinter.getCoverageRatioAt(timestamp2), 0.8e18);   // After first update
+        assertEq(msMinter.getCoverageRatioAt(timestamp2 + 50), 0.8e18); // Between updates
+        assertEq(msMinter.getCoverageRatioAt(timestamp3), 0.6e18);   // After second update
+        assertEq(msMinter.getCoverageRatioAt(timestamp3 + 150), 0.6e18); // Between updates
+        assertEq(msMinter.getCoverageRatioAt(timestamp4), 1e18);     // After third update
+        
+        // Future timestamp should return latest ratio
+        assertEq(msMinter.getCoverageRatioAt(uint48(block.timestamp + 1000)), 1e18);
     }
 
     function testMinterQuoteMint() public {
