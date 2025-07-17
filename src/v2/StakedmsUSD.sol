@@ -102,7 +102,9 @@ contract StakedmsUSD is
 
     /* ------------- CONSTRUCTOR ------------- */
 
-    constructor() {}
+    constructor() {
+        _disableInitializers();
+    }
 
     /**
      * @notice Initializes StakedmsUSD contract.

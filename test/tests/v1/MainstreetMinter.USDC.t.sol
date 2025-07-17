@@ -110,16 +110,16 @@ contract MainstreetMinterUSDCIntegrationTest is BaseSetup {
     function testMinterUSDCRequestTokensToAliceNoFuzz() public {
         // config
 
-        uint256 amountArc = 10 * 1e18; // amount of msUSD -> 18 decimals
+        uint256 amountMSUSD = 10 * 1e18; // amount of msUSD -> 18 decimals
         uint256 amountToRedeem = 10 * 1e6; // amount of USDC being claimed -> 6 decimals
 
         vm.prank(address(msMinter));
-        msUSDToken.mint(alice, amountArc);
+        msUSDToken.mint(alice, amountMSUSD);
         _dealUSDC(address(msMinter), amountToRedeem);
 
         // Pre-state check
 
-        assertApproxEqAbs(msUSDToken.balanceOf(alice), amountArc, 1);
+        assertApproxEqAbs(msUSDToken.balanceOf(alice), amountMSUSD, 1);
         assertEq(IERC20(SONIC_USDC).balanceOf(alice), 0);
         assertEq(IERC20(SONIC_USDC).balanceOf(address(msMinter)), amountToRedeem);
 
@@ -175,18 +175,18 @@ contract MainstreetMinterUSDCIntegrationTest is BaseSetup {
     function testMinterUSDCRequestTokensToAliceFuzzing(uint256 amountToRedeem) public {
         vm.assume(amountToRedeem > 0.000000000001e18 && amountToRedeem < 100_000 * 1e6);
 
-        uint256 amountArc = amountToRedeem * 1e12; // amount of msUSD -> 18 decimals
+        uint256 amountMSUSD = amountToRedeem * 1e12; // amount of msUSD -> 18 decimals
         //uint256 amountToRedeem = 10 * 1e6; // amount of USDC being claimed -> 6 decimals
 
         // config
 
         vm.prank(address(msMinter));
-        msUSDToken.mint(alice, amountArc);
+        msUSDToken.mint(alice, amountMSUSD);
         _dealUSDC(address(msMinter), amountToRedeem);
 
         // Pre-state check
 
-        assertApproxEqAbs(msUSDToken.balanceOf(alice), amountArc, 2);
+        assertApproxEqAbs(msUSDToken.balanceOf(alice), amountMSUSD, 2);
         assertEq(IERC20(SONIC_USDC).balanceOf(alice), 0);
         assertEq(IERC20(SONIC_USDC).balanceOf(address(msMinter)), amountToRedeem);
 
@@ -246,16 +246,16 @@ contract MainstreetMinterUSDCIntegrationTest is BaseSetup {
     function testMinterUSDCClaimNoFuzz() public {
         // config
 
-        uint256 amountArc = 10 * 1e18; // amount of msUSD -> 18 decimals
+        uint256 amountMSUSD = 10 * 1e18; // amount of msUSD -> 18 decimals
         uint256 amountToClaim = 10 * 1e6; // amount of USDC being claimed -> 6 decimals
 
         vm.prank(address(msMinter));
-        msUSDToken.mint(alice, amountArc);
+        msUSDToken.mint(alice, amountMSUSD);
         _dealUSDC(address(msMinter), amountToClaim);
 
         // Pre-state check
 
-        assertApproxEqAbs(msUSDToken.balanceOf(alice), amountArc, 2);
+        assertApproxEqAbs(msUSDToken.balanceOf(alice), amountMSUSD, 2);
         assertEq(IERC20(SONIC_USDC).balanceOf(alice), 0);
         assertEq(IERC20(SONIC_USDC).balanceOf(address(msMinter)), amountToClaim);
 
@@ -306,7 +306,7 @@ contract MainstreetMinterUSDCIntegrationTest is BaseSetup {
         uint256 preBal = IERC20(SONIC_USDC).balanceOf(address(msMinter));
 
         vm.prank(alice);
-        msMinter.claimTokens(address(SONIC_USDC));
+        msMinter.claimTokens(address(SONIC_USDC), 10);
 
         // Post-state check 2
 
@@ -396,7 +396,7 @@ contract MainstreetMinterUSDCIntegrationTest is BaseSetup {
         uint256 preBal = IERC20(SONIC_USDC).balanceOf(address(msMinter));
 
         vm.prank(alice);
-        msMinter.claimTokens(address(SONIC_USDC));
+        msMinter.claimTokens(address(SONIC_USDC), 10);
 
         // Post-state check 2
 

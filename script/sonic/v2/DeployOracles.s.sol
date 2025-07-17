@@ -18,8 +18,8 @@ import "../../../test/utils/Constants.sol";
     --chain-id 146 \
     -vvvv
 
-    msUSDStaticOracle: 0x7Ade4ec2311CF2257a3A8C4447b3F4bD0d95068f
-    stakedmsUSDOracle: 0x546207B9c7308bC585D5191fB3852F609486785b
+    msUSDStaticOracle: 0xb9F6F7c0f65784d5090E858B8e1C51a66743d276
+    stakedmsUSDOracle: 0x3CB909dF4DFbbf7308e8ED4fdEa6Ea6b4429a13e
  */
 
 /**

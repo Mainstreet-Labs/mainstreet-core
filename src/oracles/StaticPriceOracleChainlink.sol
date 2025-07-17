@@ -57,7 +57,7 @@ contract StaticPriceOracleChainlink is AggregatorV3Interface {
      * @return roundId Always 1
      * @return answer Fixed price
      * @return startedAt Timestamp when contract was deployed
-     * @return updatedAt Same as startedAt
+     * @return updatedAt Returns current timestamp
      * @return answeredInRound Always 1
      */
     function latestRoundData()
@@ -75,7 +75,7 @@ contract StaticPriceOracleChainlink is AggregatorV3Interface {
         roundId = FIXED_ROUND_ID;
         answer = _price;
         startedAt = _timestamp;
-        updatedAt = _timestamp;
+        updatedAt = block.timestamp;
         answeredInRound = FIXED_ROUND_ID;
     }
 

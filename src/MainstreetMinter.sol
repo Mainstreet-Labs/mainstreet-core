@@ -53,7 +53,7 @@ contract MainstreetMinter is IMainstreetMinter, OwnableUpgradeable, ReentrancyGu
     Checkpoints.Trace208 internal coverageRatio;
     EnumerableSet.AddressSet internal assets;
 
-    /// @dev Stores the indexes for each redemption request accoridng to user and asset.
+    /// @dev Stores the indexes for each redemption request according to user and asset.
     mapping(address user => mapping(address asset => uint256[])) public redemptionRequestsByAsset;
     /// @dev Stores the first unclaimed index in redemptionRequestsByAsset[user][asset].
     mapping(address user => mapping(address asset => uint256)) public firstUnclaimedIndex;
@@ -415,7 +415,7 @@ contract MainstreetMinter is IMainstreetMinter, OwnableUpgradeable, ReentrancyGu
             claimed: 0
         }));
 
-        uint256 index = (redemptionRequests[msg.sender].length - 1).toUint32();
+        uint256 index = redemptionRequests[msg.sender].length - 1;
         redemptionRequestsByAsset[msg.sender][asset].push(index);
 
         emit TokensRequested(msg.sender, asset, index, amount, amountAsset, claimableAfter);
@@ -438,7 +438,7 @@ contract MainstreetMinter is IMainstreetMinter, OwnableUpgradeable, ReentrancyGu
     {
         uint256 claimable = _calculateClaimableTokens(user, asset);
         uint256 available = IERC20(asset).balanceOf(address(this));
-        return available < claimable ? available : claimable;
+        return available < claimable ? 0 : claimable;
     }
 
     /**
@@ -447,18 +447,30 @@ contract MainstreetMinter is IMainstreetMinter, OwnableUpgradeable, ReentrancyGu
      * applies the current coverage ratio to determine final withdrawal amount,
      * transfers the assets to the caller, and updates the global redemption state.
      * Fails if no eligible tokens are available or if contract lacks sufficient balance.
+     * @dev The function also allows for incremental claims via `numIndexes` which can be used in the event 
+     * iterating the total number of redemption requests the user has outstanding would require too much gas,
+     * the user can claim their redemption requests in increments.
      * @param asset The collateral token address to be withdrawn.
+     * @param numIndexes Number of redemption requests to process.
+     * @return totalAmountRequested Total value of asset claimed by msg.sender.
+     * @return amountToClaim Actual claimed amount of asset -> The adjusted amount after applying coverage ratio.
      */
-    function claimTokens(address asset) external nonReentrant validAsset(asset, true) onlyWhitelisted {
-        (uint256 amountRequested, uint256 amountToClaim) = _claimTokens(asset, msg.sender);
+    function claimTokens(address asset, uint256 numIndexes) 
+        external
+        nonReentrant
+        validAsset(asset, true)
+        onlyWhitelisted
+        returns (uint256 totalAmountRequested, uint256 amountToClaim)
+    {
+        (totalAmountRequested, amountToClaim) = _claimTokens(asset, msg.sender, numIndexes);
 
         if (amountToClaim == 0) revert NoTokensClaimable();
         amountToClaim.requireSufficientFunds(IERC20(asset).balanceOf(address(this)));
 
-        emit TokensClaimed(msg.sender, asset, amountRequested, amountToClaim);
+        emit TokensClaimed(msg.sender, asset, totalAmountRequested, amountToClaim);
 
         IERC20(asset).safeTransfer(msg.sender, amountToClaim);
-        pendingClaims[asset] -= amountRequested;
+        pendingClaims[asset] -= totalAmountRequested;
     }
 
     /**
@@ -471,13 +483,14 @@ contract MainstreetMinter is IMainstreetMinter, OwnableUpgradeable, ReentrancyGu
      * @return amountRequested The total value of asset units being claimed.
      * @return amountBeingClaimed The adjusted amount after applying coverage ratio.
      */
-    function _claimTokens(address asset, address user) internal returns (uint256 amountRequested, uint256 amountBeingClaimed) {
-        uint256 numRequests = redemptionRequestsByAsset[user][asset].length;
+    function _claimTokens(address asset, address user, uint256 numIndexes) internal returns (uint256 amountRequested, uint256 amountBeingClaimed) {
+        uint256 numRequests = getRedemptionRequestsByAssetLength(user, asset);
         uint256 i = firstUnclaimedIndex[user][asset];
 
+        uint256 iterations;
         uint256 timestamp = clock();
 
-        while (i < numRequests) {
+        while (i < numRequests && iterations < numIndexes) {
             RedemptionRequest storage userRequest = _unsafeRedemptionRequestByAssetAccess(
                 redemptionRequestsByAsset[user][asset],
                 redemptionRequests[user],
@@ -498,6 +511,7 @@ contract MainstreetMinter is IMainstreetMinter, OwnableUpgradeable, ReentrancyGu
             }
             unchecked {
                 ++i;
+                ++iterations;
             }
         }
 
@@ -567,7 +581,7 @@ contract MainstreetMinter is IMainstreetMinter, OwnableUpgradeable, ReentrancyGu
         view
         returns (RedemptionRequest[] memory requests)
     {
-        uint256 numRequests = redemptionRequests[user].length;
+        uint256 numRequests = getRedemptionRequestsLength(user);
         if (from >= numRequests) {
             requests = new RedemptionRequest[](0);
         } else {
@@ -589,6 +603,15 @@ contract MainstreetMinter is IMainstreetMinter, OwnableUpgradeable, ReentrancyGu
     }
 
     /**
+     * @notice Returns the length of the redemptionRequests[user] mapped array.
+     * @param user number of redemption requests by user address.
+     * @return length Amount of requests for user.
+     */
+    function getRedemptionRequestsLength(address user) public view returns (uint256 length) {
+        length = redemptionRequests[user].length;
+    }
+
+    /**
      * @notice Retrieves a paginated view of a user's redemption history for a specific asset.
      * @dev Returns a filtered subset of redemption requests for a particular collateral type,
      * using specialized storage access techniques to optimize gas consumption. Handles
@@ -604,7 +627,7 @@ contract MainstreetMinter is IMainstreetMinter, OwnableUpgradeable, ReentrancyGu
         view
         returns (RedemptionRequest[] memory requests)
     {
-        uint256 numRequests = redemptionRequestsByAsset[user][asset].length;
+        uint256 numRequests = getRedemptionRequestsByAssetLength(user, asset);
         if (from >= numRequests) {
             requests = new RedemptionRequest[](0);
         } else {
@@ -627,6 +650,16 @@ contract MainstreetMinter is IMainstreetMinter, OwnableUpgradeable, ReentrancyGu
                 }
             }
         }
+    }
+
+    /**
+     * @notice Returns the length of the redemptionRequestsByAsset[user][asset] mapped array.
+     * @param user user reqests we want to query length for.
+     * @param asset token of asset we want to query requests length for.
+     * @return length Amount of requests for user by asset.
+     */
+    function getRedemptionRequestsByAssetLength(address user, address asset) public view returns (uint256 length) {
+        length = redemptionRequestsByAsset[user][asset].length;
     }
 
     /**
@@ -771,7 +804,7 @@ contract MainstreetMinter is IMainstreetMinter, OwnableUpgradeable, ReentrancyGu
      * requests.
      */
     function _calculateClaimableTokens(address user, address asset) internal view returns (uint256 amount) {
-        uint256 numRequests = redemptionRequestsByAsset[user][asset].length;
+        uint256 numRequests = getRedemptionRequestsByAssetLength(user, asset);
         uint256 i = firstUnclaimedIndex[user][asset];
 
         uint256 timestamp = clock();

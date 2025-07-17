@@ -312,6 +312,53 @@ contract MainstreetMinterTestV2 is BaseSetupV2, IErrors {
         assertEq(claimable, amount);
     }
 
+    function testMinterClaimableNotAvailable() public {
+        // config
+
+        uint256 amount = 10 ether;
+
+        vm.prank(address(msMinter));
+        msUSDToken.mint(alice, amount);
+        deal(address(FRAX), address(msMinter), amount-1);
+
+        // Pre-state check
+
+        assertEq(msUSDToken.balanceOf(alice), amount);
+        assertEq(FRAX.balanceOf(alice), 0);
+        assertEq(FRAX.balanceOf(address(msMinter)), amount-1);
+
+        MainstreetMinter.RedemptionRequest[] memory requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        assertEq(requests.length, 0);
+
+        assertEq(msMinter.quoteRedeem(address(FRAX), alice, amount), amount);
+
+        // Alice executes requestTokens
+
+        vm.startPrank(alice);
+        msUSDToken.approve(address(msMinter), amount);
+        msMinter.requestTokens(address(FRAX), amount);
+        vm.stopPrank();
+
+        // Post-state check - available < claimable returns 0
+
+        vm.warp(block.timestamp + msMinter.claimDelay());
+
+        uint256 requested = msMinter.pendingClaims(address(FRAX));
+        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX));
+
+        assertEq(requested, amount);
+        assertEq(claimable, 0);
+
+        // deal claimable to minter
+
+        deal(address(FRAX), address(msMinter), amount);
+
+        // Post-state check - available > claimable returns claimable
+
+        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        assertEq(claimable, amount);
+    }
+
     function testMinterRequestTokensTaxNoFuzz() public {
         // config
 
@@ -830,7 +877,7 @@ contract MainstreetMinterTestV2 is BaseSetupV2, IErrors {
         // Alice claims FRAX
 
         vm.prank(alice);
-        msMinter.claimTokens(address(FRAX));
+        msMinter.claimTokens(address(FRAX), 10);
 
         // Post-state check 2
 
@@ -864,7 +911,7 @@ contract MainstreetMinterTestV2 is BaseSetupV2, IErrors {
         // Alice claims USDC
 
         vm.prank(alice);
-        msMinter.claimTokens(address(USDCToken));
+        msMinter.claimTokens(address(USDCToken), 10);
 
         // Post-state check 3
 
@@ -949,7 +996,7 @@ contract MainstreetMinterTestV2 is BaseSetupV2, IErrors {
         // Alice claims
 
         vm.prank(alice);
-        msMinter.claimTokens(address(FRAX));
+        msMinter.claimTokens(address(FRAX), 10);
 
         // Post-state check 2
 
@@ -1022,7 +1069,7 @@ contract MainstreetMinterTestV2 is BaseSetupV2, IErrors {
         // claims with 0 funds to be claimed, revert
         vm.prank(alice);
         vm.expectRevert();
-        msMinter.claimTokens(address(FRAX));
+        msMinter.claimTokens(address(FRAX), 10);
 
         deal(address(FRAX), address(msMinter), amount);
         assertEq(FRAX.balanceOf(address(msMinter)), amount);
@@ -1031,7 +1078,7 @@ contract MainstreetMinterTestV2 is BaseSetupV2, IErrors {
         assertEq(msMinter.claimableTokens(alice, address(FRAX)), 0);
         vm.prank(alice);
         vm.expectRevert(abi.encodeWithSelector(IMainstreetMinter.NoTokensClaimable.selector));
-        msMinter.claimTokens(address(FRAX));
+        msMinter.claimTokens(address(FRAX), 10);
     }
 
     function testMinterClaimFuzzing(uint256 amount) public {
@@ -1087,7 +1134,7 @@ contract MainstreetMinterTestV2 is BaseSetupV2, IErrors {
         // Alice claims
 
         vm.prank(alice);
-        msMinter.claimTokens(address(FRAX));
+        msMinter.claimTokens(address(FRAX), 10);
 
         // Post-state check 2
 
@@ -1547,7 +1594,7 @@ contract MainstreetMinterTestV2 is BaseSetupV2, IErrors {
         // Alice claims
 
         vm.prank(alice);
-        msMinter.claimTokens(address(FRAX));
+        msMinter.claimTokens(address(FRAX), 10);
 
         // Post-state check 2
 
@@ -1634,7 +1681,7 @@ contract MainstreetMinterTestV2 is BaseSetupV2, IErrors {
         // Alice claims
 
         vm.prank(alice);
-        msMinter.claimTokens(address(FRAX));
+        msMinter.claimTokens(address(FRAX), 10);
 
         // Post-state check 2
 
@@ -1721,7 +1768,7 @@ contract MainstreetMinterTestV2 is BaseSetupV2, IErrors {
         // Alice claims
 
         vm.prank(alice);
-        msMinter.claimTokens(address(FRAX));
+        msMinter.claimTokens(address(FRAX), 10);
 
         // Post-state check 2
 
@@ -1788,7 +1835,7 @@ contract MainstreetMinterTestV2 is BaseSetupV2, IErrors {
         // Alice claims
 
         vm.prank(alice);
-        msMinter.claimTokens(address(FRAX));
+        msMinter.claimTokens(address(FRAX), 10);
 
         // Post-state check 4
 
@@ -1930,7 +1977,7 @@ contract MainstreetMinterTestV2 is BaseSetupV2, IErrors {
 
         // alice claims
         vm.prank(alice);
-        msMinter.claimTokens(address(FRAX));
+        msMinter.claimTokens(address(FRAX), 10);
 
         // successful redemption request
         vm.startPrank(alice);
