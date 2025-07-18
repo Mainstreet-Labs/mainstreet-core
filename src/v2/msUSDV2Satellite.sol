@@ -7,7 +7,7 @@ import {IOFTCore} from "@layerzerolabs/contracts/token/oft/v1/interfaces/IOFTCor
 
 /**
  * @title msUSDV2Satellite - Satellite Chain Implementation
- * @author Mainstreet Protocol Team
+ * @author Mainstreet Labs
  * @notice The satellite chain implementation of msUSDV2, deployed on all non-home chains to enable cross-chain
  * transfers of the msUSD synthetic stablecoin. This contract uses LayerZero's standard burn-and-mint mechanism
  * to ensure proper token supply management across the omnichain ecosystem. This contract also

@@ -24,6 +24,7 @@ import {CommonValidations} from "./libraries/CommonValidations.sol";
 
 /**
  * @title MainstreetMinter
+ * @author Mainstreet Labs
  * @notice A multi-asset collateralization protocol that enables issuance and redemption of msUSD stablecoin.
  * This contract serves as the central hub for managing collateral assets, facilitating price discovery through 
  * external oracles, and orchestrating the lifecycle of token minting and redemption requests.

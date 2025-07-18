@@ -13,6 +13,7 @@ import {msUSDSilo} from "./msUSDSilo.sol";
 
 /**
  * @title StakedmsUSD
+ * @author Mainstreet Labs
  * @notice A liquid staking token for msUSD that enables users to earn yield while maintaining liquidity.
  * Users can stake msUSD tokens to receive smsUSD shares that appreciate in value as protocol rewards
  * are distributed. The contract implements a flexible cooldown system that can be enabled or disabled

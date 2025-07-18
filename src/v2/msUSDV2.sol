@@ -8,7 +8,7 @@ import {ImsUSDV2} from "../interfaces/ImsUSDV2.sol";
 
 /**
  * @title msUSDV2
- * @author Mainstreet Protocol Team
+ * @author Mainstreet Labs
  * @notice The home chain implementation of msUSDV2, a cross-chain synthetic USD stablecoin built on LayerZero's 
  * Omnichain Fungible Token (OFT) standard. This contract serves as the primary token contract where the underlying
  * collateral is deposited and msUSD tokens are originally minted through the minter contract. This contract also
