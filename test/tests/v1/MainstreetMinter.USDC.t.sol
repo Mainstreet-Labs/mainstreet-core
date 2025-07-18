@@ -146,7 +146,7 @@ contract MainstreetMinterUSDCIntegrationTest is BaseSetup {
         assertEq(requests[0].claimed, 0);
 
         uint256 requested = msMinter.pendingClaims(address(SONIC_USDC));
-        uint256 claimable = msMinter.claimableTokens(alice, address(SONIC_USDC));
+        uint256 claimable = msMinter.claimableTokens(alice, address(SONIC_USDC), 10);
 
         assertEq(requested, quoteOut);
         assertEq(claimable, 0);
@@ -156,7 +156,7 @@ contract MainstreetMinterUSDCIntegrationTest is BaseSetup {
         vm.warp(block.timestamp + msMinter.claimDelay() - 1);
 
         requested = msMinter.pendingClaims(address(SONIC_USDC));
-        claimable = msMinter.claimableTokens(alice, address(SONIC_USDC));
+        claimable = msMinter.claimableTokens(alice, address(SONIC_USDC), 10);
 
         assertEq(requested, quoteOut);
         assertEq(claimable, 0);
@@ -166,7 +166,7 @@ contract MainstreetMinterUSDCIntegrationTest is BaseSetup {
         vm.warp(block.timestamp + msMinter.claimDelay());
 
         requested = msMinter.pendingClaims(address(SONIC_USDC));
-        claimable = msMinter.claimableTokens(alice, address(SONIC_USDC));
+        claimable = msMinter.claimableTokens(alice, address(SONIC_USDC), 10);
 
         assertEq(requested, quoteOut);
         assertEq(claimable, quoteOut);
@@ -217,7 +217,7 @@ contract MainstreetMinterUSDCIntegrationTest is BaseSetup {
         assertEq(requests[0].claimed, 0);
 
         uint256 requested = msMinter.pendingClaims(address(SONIC_USDC));
-        uint256 claimable = msMinter.claimableTokens(alice, address(SONIC_USDC));
+        uint256 claimable = msMinter.claimableTokens(alice, address(SONIC_USDC), 10);
 
         assertEq(requested, quoteOut);
         assertEq(claimable, 0);
@@ -227,7 +227,7 @@ contract MainstreetMinterUSDCIntegrationTest is BaseSetup {
         vm.warp(block.timestamp + msMinter.claimDelay() - 1);
 
         requested = msMinter.pendingClaims(address(SONIC_USDC));
-        claimable = msMinter.claimableTokens(alice, address(SONIC_USDC));
+        claimable = msMinter.claimableTokens(alice, address(SONIC_USDC), 10);
 
         assertEq(requested, quoteOut);
         assertEq(claimable, 0);
@@ -237,7 +237,7 @@ contract MainstreetMinterUSDCIntegrationTest is BaseSetup {
         vm.warp(block.timestamp + msMinter.claimDelay());
 
         requested = msMinter.pendingClaims(address(SONIC_USDC));
-        claimable = msMinter.claimableTokens(alice, address(SONIC_USDC));
+        claimable = msMinter.claimableTokens(alice, address(SONIC_USDC), 10);
 
         assertEq(requested, quoteOut);
         assertEq(claimable, quoteOut);
@@ -286,7 +286,7 @@ contract MainstreetMinterUSDCIntegrationTest is BaseSetup {
         assertEq(requests[0].claimed, 0);
 
         uint256 requested = msMinter.pendingClaims(address(SONIC_USDC));
-        uint256 claimable = msMinter.claimableTokens(alice, address(SONIC_USDC));
+        uint256 claimable = msMinter.claimableTokens(alice, address(SONIC_USDC), 10);
 
         assertEq(requested, quoteOut);
         assertEq(claimable, 0);
@@ -296,7 +296,7 @@ contract MainstreetMinterUSDCIntegrationTest is BaseSetup {
         vm.warp(block.timestamp + msMinter.claimDelay());
 
         requested = msMinter.pendingClaims(address(SONIC_USDC));
-        claimable = msMinter.claimableTokens(alice, address(SONIC_USDC));
+        claimable = msMinter.claimableTokens(alice, address(SONIC_USDC), 10);
 
         assertEq(requested, quoteOut);
         assertEq(claimable, quoteOut);
@@ -321,7 +321,7 @@ contract MainstreetMinterUSDCIntegrationTest is BaseSetup {
         assertEq(requests[0].claimed, quoteOut);
 
         requested = msMinter.pendingClaims(address(SONIC_USDC));
-        claimable = msMinter.claimableTokens(alice, address(SONIC_USDC));
+        claimable = msMinter.claimableTokens(alice, address(SONIC_USDC), 10);
 
         assertEq(requested, 0);
         assertEq(claimable, 0);
@@ -376,7 +376,7 @@ contract MainstreetMinterUSDCIntegrationTest is BaseSetup {
         assertEq(requests[0].claimed, 0);
 
         uint256 requested = msMinter.pendingClaims(address(SONIC_USDC));
-        uint256 claimable = msMinter.claimableTokens(alice, address(SONIC_USDC));
+        uint256 claimable = msMinter.claimableTokens(alice, address(SONIC_USDC), 10);
 
         assertEq(requested, quoteOut);
         assertEq(claimable, 0);
@@ -386,7 +386,7 @@ contract MainstreetMinterUSDCIntegrationTest is BaseSetup {
         vm.warp(block.timestamp + msMinter.claimDelay());
 
         requested = msMinter.pendingClaims(address(SONIC_USDC));
-        claimable = msMinter.claimableTokens(alice, address(SONIC_USDC));
+        claimable = msMinter.claimableTokens(alice, address(SONIC_USDC), 10);
 
         assertEq(requested, quoteOut);
         assertEq(claimable, quoteOut);
@@ -411,7 +411,7 @@ contract MainstreetMinterUSDCIntegrationTest is BaseSetup {
         assertEq(requests[0].claimed, quoteOut);
 
         requested = msMinter.pendingClaims(address(SONIC_USDC));
-        claimable = msMinter.claimableTokens(alice, address(SONIC_USDC));
+        claimable = msMinter.claimableTokens(alice, address(SONIC_USDC), 10);
 
         assertEq(requested, 0);
         assertEq(claimable, 0);

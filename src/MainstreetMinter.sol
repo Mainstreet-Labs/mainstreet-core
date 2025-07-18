@@ -430,13 +430,13 @@ contract MainstreetMinter is IMainstreetMinter, OwnableUpgradeable, ReentrancyGu
      * @param asset The collateral token address being evaluated for withdrawal.
      * @return amount The maximum quantity currently available for withdrawal.
      */
-    function claimableTokens(address user, address asset)
+    function claimableTokens(address user, address asset, uint256 numIndexes)
         external
         view
         validAsset(asset, true)
         returns (uint256 amount)
     {
-        uint256 claimable = _calculateClaimableTokens(user, asset);
+        uint256 claimable = _calculateClaimableTokens(user, asset, numIndexes);
         uint256 available = IERC20(asset).balanceOf(address(this));
         return available < claimable ? 0 : claimable;
     }
@@ -803,13 +803,14 @@ contract MainstreetMinter is IMainstreetMinter, OwnableUpgradeable, ReentrancyGu
      * @return amount The total amount of the supported asset that the user can claim, based on their redemption
      * requests.
      */
-    function _calculateClaimableTokens(address user, address asset) internal view returns (uint256 amount) {
+    function _calculateClaimableTokens(address user, address asset, uint256 numIndexes) internal view returns (uint256 amount) {
         uint256 numRequests = getRedemptionRequestsByAssetLength(user, asset);
         uint256 i = firstUnclaimedIndex[user][asset];
 
+        uint256 iterations;
         uint256 timestamp = clock();
 
-        while (i < numRequests) {
+        while (i < numRequests && iterations < numIndexes) {
             RedemptionRequest storage request =
                 _unsafeRedemptionRequestByAssetAccess(redemptionRequestsByAsset[user][asset], redemptionRequests[user], i);
 
@@ -826,6 +827,7 @@ contract MainstreetMinter is IMainstreetMinter, OwnableUpgradeable, ReentrancyGu
 
             unchecked {
                 ++i;
+                ++iterations;
             }
         }
     }

@@ -288,7 +288,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, 0);
 
         uint256 requested = msMinter.pendingClaims(address(FRAX));
-        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX));
+        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, 0);
@@ -298,7 +298,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay() - 1);
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, 0);
@@ -308,7 +308,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay());
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, amount);
@@ -361,7 +361,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, 0);
 
         uint256 requested = msMinter.pendingClaims(address(FRAX));
-        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX));
+        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amountAfterTax);
         assertEq(claimable, 0);
@@ -371,7 +371,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay() - 1);
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amountAfterTax);
         assertEq(claimable, 0);
@@ -381,7 +381,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay());
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amountAfterTax);
         assertEq(claimable, amountAfterTax);
@@ -427,7 +427,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, 0);
 
         uint256 requested = msMinter.pendingClaims(address(FRAX));
-        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX));
+        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, 0);
@@ -442,7 +442,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay());
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, 0);
@@ -452,7 +452,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + newDelay);
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, amount);
@@ -496,7 +496,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, 0);
 
         uint256 requested = msMinter.pendingClaims(address(FRAX));
-        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX));
+        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, 0);
@@ -509,7 +509,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         // query claimable
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, amount);
@@ -555,7 +555,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, 0);
 
         uint256 requested = msMinter.pendingClaims(address(FRAX));
-        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX));
+        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, 0);
@@ -565,7 +565,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay() - 1);
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, 0);
@@ -575,7 +575,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay());
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, amount);
@@ -628,7 +628,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, 0);
 
         uint256 requested = msMinter.pendingClaims(address(FRAX));
-        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX));
+        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amountAfterTax);
         assertEq(claimable, 0);
@@ -638,7 +638,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay() - 1);
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amountAfterTax);
         assertEq(claimable, 0);
@@ -648,7 +648,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay());
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amountAfterTax);
         assertEq(claimable, amountAfterTax);
@@ -697,7 +697,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, 0);
 
         uint256 requested = msMinter.pendingClaims(address(FRAX));
-        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX));
+        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount1);
         assertEq(claimable, 0);
@@ -730,7 +730,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[1].claimed, 0);
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount1 + amount2);
         assertEq(claimable, 0);
@@ -740,7 +740,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay() - 1);
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount1 + amount2);
         assertEq(claimable, amount1);
@@ -750,7 +750,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay());
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount1 + amount2);
         assertEq(claimable, amount1 + amount2);
@@ -806,8 +806,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         uint256 requestedFRAX = msMinter.pendingClaims(address(FRAX));
         uint256 requestedUSDC = msMinter.pendingClaims(address(USDCToken));
 
-        uint256 claimableFRAX = msMinter.claimableTokens(alice, address(FRAX));
-        uint256 claimableUSDC = msMinter.claimableTokens(alice, address(USDCToken));
+        uint256 claimableFRAX = msMinter.claimableTokens(alice, address(FRAX), 10);
+        uint256 claimableUSDC = msMinter.claimableTokens(alice, address(USDCToken), 10);
 
         assertEq(requestedFRAX, amountFRAX);
         assertEq(requestedUSDC, amountUSDC);
@@ -821,8 +821,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         requestedFRAX = msMinter.pendingClaims(address(FRAX));
         requestedUSDC = msMinter.pendingClaims(address(USDCToken));
 
-        claimableFRAX = msMinter.claimableTokens(alice, address(FRAX));
-        claimableUSDC = msMinter.claimableTokens(alice, address(USDCToken));
+        claimableFRAX = msMinter.claimableTokens(alice, address(FRAX), 10);
+        claimableUSDC = msMinter.claimableTokens(alice, address(USDCToken), 10);
 
         assertEq(requestedFRAX, amountFRAX);
         assertEq(requestedUSDC, amountUSDC);
@@ -855,8 +855,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         requestedFRAX = msMinter.pendingClaims(address(FRAX));
         requestedUSDC = msMinter.pendingClaims(address(USDCToken));
 
-        claimableFRAX = msMinter.claimableTokens(alice, address(FRAX));
-        claimableUSDC = msMinter.claimableTokens(alice, address(USDCToken));
+        claimableFRAX = msMinter.claimableTokens(alice, address(FRAX), 10);
+        claimableUSDC = msMinter.claimableTokens(alice, address(USDCToken), 10);
 
         assertEq(requestedFRAX, 0);
         assertEq(requestedUSDC, amountUSDC);
@@ -886,8 +886,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         requestedFRAX = msMinter.pendingClaims(address(FRAX));
         requestedUSDC = msMinter.pendingClaims(address(USDCToken));
 
-        claimableFRAX = msMinter.claimableTokens(alice, address(FRAX));
-        claimableUSDC = msMinter.claimableTokens(alice, address(USDCToken));
+        claimableFRAX = msMinter.claimableTokens(alice, address(FRAX), 10);
+        claimableUSDC = msMinter.claimableTokens(alice, address(USDCToken), 10);
 
         assertEq(requestedFRAX, 0);
         assertEq(requestedUSDC, 0);
@@ -933,7 +933,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, 0);
 
         uint256 requested = msMinter.pendingClaims(address(FRAX));
-        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX));
+        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, 0);
@@ -943,7 +943,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay());
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, amount);
@@ -966,7 +966,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, amount);
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, 0);
         assertEq(claimable, 0);
@@ -1004,7 +1004,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, 0);
 
         uint256 requested = msMinter.pendingClaims(address(FRAX));
-        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX));
+        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, 0);
@@ -1014,7 +1014,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay() - 1);
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, 0);
@@ -1030,7 +1030,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(FRAX.balanceOf(address(msMinter)), amount);
 
         // claims when it's too early, revert
-        assertEq(msMinter.claimableTokens(alice, address(FRAX)), 0);
+        assertEq(msMinter.claimableTokens(alice, address(FRAX), 10), 0);
         vm.prank(alice);
         vm.expectRevert(abi.encodeWithSelector(IMainstreetMinter.NoTokensClaimable.selector));
         msMinter.claimTokens(address(FRAX), 10);
@@ -1071,7 +1071,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, 0);
 
         uint256 requested = msMinter.pendingClaims(address(FRAX));
-        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX));
+        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, 0);
@@ -1081,7 +1081,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay());
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, amount);
@@ -1104,7 +1104,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, amount);
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, 0);
         assertEq(claimable, 0);
@@ -1197,7 +1197,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, 0);
 
         uint256 requested = msMinter.pendingClaims(address(FRAX));
-        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX));
+        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, newBal);
         assertEq(claimable, 0);
@@ -1207,7 +1207,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay() - 1);
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, newBal);
         assertEq(claimable, 0);
@@ -1217,7 +1217,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay());
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, newBal);
         assertEq(claimable, newBal);
@@ -1274,7 +1274,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, 0);
 
         uint256 requested = msMinter.pendingClaims(address(FRAX));
-        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX));
+        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, newBal);
         assertEq(claimable, 0);
@@ -1284,7 +1284,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay() - 1);
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, newBal);
         assertEq(claimable, 0);
@@ -1294,7 +1294,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay());
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, newBal);
         assertEq(claimable, newBal);
@@ -1354,7 +1354,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, 0);
 
         uint256 requested = msMinter.pendingClaims(address(FRAX));
-        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX));
+        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, newBal);
         assertEq(claimable, 0);
@@ -1364,7 +1364,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay() - 1);
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, newBal);
         assertEq(claimable, 0);
@@ -1374,7 +1374,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay());
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, newBal);
         assertEq(claimable, newBal);
@@ -1396,7 +1396,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, newBal);
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, 0);
         assertEq(claimable, 0);
@@ -1758,7 +1758,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         // Warp to post-claimDelay and query claimable
         vm.warp(block.timestamp + msMinter.claimDelay());
         uint256 requested = msMinter.pendingClaims(address(FRAX));
-        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX));
+        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
         assertEq(requested, amount);
         assertEq(claimable, amount);
 
@@ -1770,7 +1770,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         // Post-state check
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
         assertEq(requested, amount);
         assertLt(claimable, amount);
         assertEq(claimable, amount * ratio / 1e18);
@@ -1815,7 +1815,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, 0);
 
         uint256 requested = msMinter.pendingClaims(address(FRAX));
-        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX));
+        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, 0);
@@ -1832,7 +1832,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay());
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertLt(claimable, amount);
@@ -1856,7 +1856,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, amount * ratio / 1e18);
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, 0);
         assertEq(claimable, 0);
@@ -1902,7 +1902,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, 0);
 
         uint256 requested = msMinter.pendingClaims(address(FRAX));
-        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX));
+        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, 0);
@@ -1919,7 +1919,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay());
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertLt(claimable, amount);
@@ -1943,7 +1943,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, amount * ratio / 1e18);
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, 0);
         assertEq(claimable, 0);
@@ -1987,7 +1987,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, 0);
 
         uint256 requested = msMinter.pendingClaims(address(FRAX));
-        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX));
+        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, 0);
@@ -2006,7 +2006,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay());
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertLt(claimable, amount);
@@ -2030,7 +2030,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[0].claimed, amount * ratio / 1e18);
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, 0);
         assertEq(claimable, 0);
@@ -2058,7 +2058,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[1].claimed, 0);
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, 0);
@@ -2074,7 +2074,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.warp(block.timestamp + msMinter.claimDelay());
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, amount);
         assertEq(claimable, amount);
@@ -2100,7 +2100,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(requests[1].claimed, amount);
 
         requested = msMinter.pendingClaims(address(FRAX));
-        claimable = msMinter.claimableTokens(alice, address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
 
         assertEq(requested, 0);
         assertEq(claimable, 0);
