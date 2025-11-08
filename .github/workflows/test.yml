@@ -36,5 +36,5 @@ jobs:
           forge test
         env:
           SONIC_RPC_URL: ${{ secrets.SONIC_RPC_URL }}
-          BLAZE_RPC_URL: ${{ secrets.BLAZE_RPC_URL }}
+          SONIC_TEST_RPC_URL: ${{ secrets.SONIC_TEST_RPC_URL }}
         id: test

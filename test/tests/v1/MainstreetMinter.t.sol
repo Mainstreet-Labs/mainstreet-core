@@ -972,6 +972,84 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(claimable, 0);
     }
 
+    function testMinterClaimClaimDelay0() public {
+        // config
+
+        vm.prank(owner);
+        msMinter.setClaimDelay(0);
+
+        uint256 amount = 10 ether;
+
+        vm.prank(address(msMinter));
+        msUSDToken.mint(alice, amount);
+        deal(address(FRAX), address(msMinter), amount);
+
+        // Pre-state check
+
+        assertEq(msUSDToken.balanceOf(alice), amount);
+        assertEq(FRAX.balanceOf(alice), 0);
+        assertEq(FRAX.balanceOf(address(msMinter)), amount);
+
+        MainstreetMinter.RedemptionRequest[] memory requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        assertEq(requests.length, 0);
+
+        // Alice executes requestTokens
+
+        vm.startPrank(alice);
+        msUSDToken.approve(address(msMinter), amount);
+        msMinter.requestTokens(address(FRAX), amount);
+        vm.stopPrank();
+
+        // Post-state check 1
+
+        assertEq(msUSDToken.balanceOf(alice), 0);
+        assertEq(FRAX.balanceOf(alice), 0);
+        assertEq(FRAX.balanceOf(address(msMinter)), amount);
+
+        requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        assertEq(requests.length, 1);
+        assertEq(requests[0].amount, amount);
+        assertEq(requests[0].claimableAfter, block.timestamp);
+        assertEq(requests[0].claimed, 0);
+
+        uint256 requested = msMinter.pendingClaims(address(FRAX));
+        uint256 claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
+
+        assertEq(requested, amount);
+        assertEq(claimable, amount);
+
+        // Warp to post-claimDelay and query claimable
+
+        requested = msMinter.pendingClaims(address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
+
+        assertEq(requested, amount);
+        assertEq(claimable, amount);
+
+        // Alice claims
+
+        vm.prank(alice);
+        msMinter.claimTokens(address(FRAX), 10);
+
+        // Post-state check 2
+
+        assertEq(msUSDToken.balanceOf(alice), 0);
+        assertEq(FRAX.balanceOf(alice), amount);
+        assertEq(FRAX.balanceOf(address(msMinter)), 0);
+
+        requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        assertEq(requests.length, 1);
+        assertEq(requests[0].amount, amount);
+        assertEq(requests[0].claimableAfter, block.timestamp);
+        assertEq(requests[0].claimed, amount);
+
+        requested = msMinter.pendingClaims(address(FRAX));
+        claimable = msMinter.claimableTokens(alice, address(FRAX), 10);
+
+        assertEq(requested, 0);
+        assertEq(claimable, 0);
+    }
+
     function testMinterClaimEarlyRevert() public {
         // config
 

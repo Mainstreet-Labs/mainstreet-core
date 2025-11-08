@@ -14,13 +14,13 @@ import "../../test/utils/Constants.sol";
  */
 contract RebaseWithDelta is Script {
     uint256 public DEPLOYER_PRIVATE_KEY = vm.envUint("DEPLOYER_PRIVATE_KEY");
-    string public BLAZE_RPC_URL = vm.envString("BLAZE_RPC_URL");
+    string public SONIC_TEST_RPC_URL = vm.envString("SONIC_TEST_RPC_URL");
     
     msUSD public msUSDToken = msUSD(0x12231E7FD7164613b911BBA5743210dAfF594482); /// @dev
     uint256 public delta = 20 * 1e18; /// @dev
 
     function setUp() public {
-        vm.createSelectFork(BLAZE_RPC_URL);
+        vm.createSelectFork(SONIC_TEST_RPC_URL);
     }
 
     function run() public {

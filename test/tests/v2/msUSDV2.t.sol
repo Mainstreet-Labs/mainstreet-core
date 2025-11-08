@@ -164,7 +164,7 @@ contract msUSDV2Test is BaseSetupV2 {
         assertEq(msUSDToken.minter(), address(msMinter));
     }
 
-    function testMainstreetUSDV2SetSupplyLimit() public { // TODO
+    function testMainstreetUSDV2SetSupplyLimit() public {
         uint256 supplyLimit = msUSDToken.supplyLimit();
         uint256 newLimit = 1 ether;
         assertNotEq(msUSDToken.supplyLimit(), newLimit);
@@ -174,7 +174,7 @@ contract msUSDV2Test is BaseSetupV2 {
         assertEq(msUSDToken.supplyLimit(), newLimit);
     }
 
-    function testMainstreetUSDV2OnlyOwnerCanSetSupplyLimit() public { // TODO
+    function testMainstreetUSDV2OnlyOwnerCanSetSupplyLimit() public {
         vm.prank(bob);
         vm.expectRevert();
         msUSDToken.setSupplyLimit(1);
@@ -182,7 +182,8 @@ contract msUSDV2Test is BaseSetupV2 {
         msUSDToken.setSupplyLimit(1);
     }
 
-    // TODO: Test supplyLimit
-    // TODO: Test cross chain stuff
-    // TODO: Natspec
+    function testKeccak() public {
+        bytes memory calculated_hash = abi.encodePacked("abc", uint256(5));
+        emit log_named_bytes("hash", calculated_hash);
+    }
 }

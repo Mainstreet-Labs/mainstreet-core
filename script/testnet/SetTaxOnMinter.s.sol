@@ -14,13 +14,13 @@ import "../../test/utils/Constants.sol";
  */
 contract SetTaxOnMinter is Script {
     uint256 public DEPLOYER_PRIVATE_KEY = vm.envUint("DEPLOYER_PRIVATE_KEY");
-    string public BLAZE_RPC_URL = vm.envString("BLAZE_RPC_URL");
+    string public SONIC_TEST_RPC_URL = vm.envString("SONIC_TEST_RPC_URL");
     
     MainstreetMinter public minter = MainstreetMinter(0xDC551E0c4A5Cdd4ac9dB5dE95EE09E171Ff92d6B); /// @dev assign
     uint16 public newTax = 0; /// @dev assign
 
     function setUp() public {
-        vm.createSelectFork(BLAZE_RPC_URL);
+        vm.createSelectFork(SONIC_TEST_RPC_URL);
     }
 
     function run() public {

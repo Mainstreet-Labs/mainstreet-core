@@ -43,6 +43,25 @@ contract StakedmsUSDERC4626Test is BaseSetupV2 {
         assertEq(sharesReceived, depositAmount); // 1:1 ratio initially
     }
 
+    /// @dev Tests that deposit function reverts when deposits are disabled
+    function testStakedmsUSDDepositWhenDeppositsAreDisabled() public {
+        vm.startPrank(owner);
+        smsUSD.setCooldownDuration(0);
+        smsUSD.toggleDeposits();
+        vm.stopPrank();
+
+        uint256 depositAmount = 1000 ether;
+
+        // Setup: Give alice some msUSD tokens and approve the staking contract
+        deal(address(msUSDToken), alice, depositAmount);
+        vm.prank(alice);
+        msUSDToken.approve(address(smsUSD), depositAmount);
+        
+        vm.prank(alice);
+        vm.expectRevert(abi.encodePacked(IStakedmsUSD.DepositsDisabled.selector));
+        uint256 sharesReceived = smsUSD.deposit(depositAmount, alice);
+    }
+
     /// @dev Tests that mint function works correctly when cooldown is disabled
     /// @dev User mints 1:1 ratio msUSD -> smsUSD
     function testStakedmsUSDMintWhenCooldownDisabled() public {
@@ -68,6 +87,25 @@ contract StakedmsUSDERC4626Test is BaseSetupV2 {
         assertEq(msUSDToken.balanceOf(address(smsUSD)), contractBalanceBefore + assetsUsed);
         assertEq(smsUSD.balanceOf(alice), aliceSharesBefore + sharesToMint);
         assertEq(assetsUsed, sharesToMint); // 1:1 ratio initially
+    }
+
+    /// @dev Tests that mint function reverts when deposits are disabled
+    function testStakedmsUSDMintWhenDeppositsAreDisabled() public {
+        vm.startPrank(owner);
+        smsUSD.setCooldownDuration(0);
+        smsUSD.toggleDeposits();
+        vm.stopPrank();
+
+        uint256 sharesToMint = 1000 ether;
+
+        // Setup: Give alice some msUSD tokens and approve the staking contract
+        deal(address(msUSDToken), alice, sharesToMint * 2); // Give extra to be safe
+        vm.prank(alice);
+        msUSDToken.approve(address(smsUSD), type(uint256).max);
+        
+        vm.prank(alice);
+        vm.expectRevert(abi.encodePacked(IStakedmsUSD.DepositsDisabled.selector));
+        uint256 assetsUsed = smsUSD.mint(sharesToMint, alice);
     }
 
     /// @dev Tests that withdraw function works correctly when cooldown is disabled

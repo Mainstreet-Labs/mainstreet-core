@@ -253,6 +253,134 @@ contract StakedmsUSDStakingTest is BaseSetupV2 {
         assertEq(underlyingAmount, 0);
     }
 
+    /// @dev Tests successful unstaking when coverageRatio is less than 1e18
+    function testStakedmsUSDCoverageRatoSub1() public {
+        uint256 depositAmount = 1000 ether;
+        uint256 cooldownAmount = 500 ether;
+        uint256 newCoverageRatio = .8 * 1e18;
+        
+        // Setup: Deposit and start cooldown
+        deal(address(msUSDToken), alice, depositAmount);
+        vm.prank(alice);
+        msUSDToken.approve(address(smsUSD), depositAmount);
+        vm.prank(alice);
+        smsUSD.deposit(depositAmount, alice);
+        
+        vm.prank(alice);
+        smsUSD.cooldownAssets(cooldownAmount, alice);
+        
+        // Fast forward past cooldown period
+        vm.warp(block.timestamp + smsUSD.cooldownDuration() + 1);
+        
+        uint256 aliceBalanceBefore = msUSDToken.balanceOf(alice);
+        uint256 siloBalanceBefore = msUSDToken.balanceOf(address(silo));
+        uint256 vaultBalanceBefore = smsUSD.balanceOf(address(msUSDToken));
+        uint256 totalAssetsBefore = smsUSD.totalAssets();
+
+        // Set coverageRatio
+        vm.prank(owner);
+        smsUSD.setCoverageRatio(newCoverageRatio);
+        
+        // Unstake
+        vm.prank(alice);
+        smsUSD.unstake(alice);
+        
+        // Check assets were transferred back to alice
+        assertEq(msUSDToken.balanceOf(alice), (aliceBalanceBefore + cooldownAmount) * newCoverageRatio / 1e18);
+        assertEq(msUSDToken.balanceOf(address(silo)), siloBalanceBefore - cooldownAmount);
+        assertEq(smsUSD.balanceOf(address(msUSDToken)), vaultBalanceBefore);
+        assertEq(smsUSD.totalAssets(), totalAssetsBefore);
+        
+        // Check cooldown was reset
+        (uint104 cooldownEnd, uint256 underlyingAmount) = smsUSD.cooldowns(alice);
+        assertEq(cooldownEnd, 0);
+        assertEq(underlyingAmount, 0);
+    }
+
+    /// @dev Tests successful unstaking when the cooldown is set to 0
+    function testStakedmsUSDUnstakeAfterCooldownSetTo0() public {
+        uint256 depositAmount = 1000 ether;
+        uint256 cooldownAmount = 500 ether;
+        uint256 newCoverageRatio = .8 * 1e18;
+        
+        // Setup: Deposit and start cooldown
+        deal(address(msUSDToken), alice, depositAmount);
+        vm.prank(alice);
+        msUSDToken.approve(address(smsUSD), depositAmount);
+        vm.prank(alice);
+        smsUSD.deposit(depositAmount, alice);
+        
+        vm.prank(alice);
+        smsUSD.cooldownAssets(cooldownAmount, alice);
+        
+        // Fast forward past cooldown period
+        vm.warp(block.timestamp + smsUSD.cooldownDuration() + 1);
+        
+        uint256 aliceBalanceBefore = msUSDToken.balanceOf(alice);
+        uint256 siloBalanceBefore = msUSDToken.balanceOf(address(silo));
+
+        // set cooldown to 0
+        vm.prank(owner);
+        smsUSD.setCooldownDuration(0);
+        
+        // Unstake
+        vm.prank(alice);
+        smsUSD.unstake(alice);
+        
+        // Check assets were transferred back to alice
+        assertEq(msUSDToken.balanceOf(alice), aliceBalanceBefore + cooldownAmount);
+        assertEq(msUSDToken.balanceOf(address(silo)), siloBalanceBefore - cooldownAmount);
+        
+        // Check cooldown was reset
+        (uint104 cooldownEnd, uint256 underlyingAmount) = smsUSD.cooldowns(alice);
+        assertEq(cooldownEnd, 0);
+        assertEq(underlyingAmount, 0);
+    }
+
+    /// @dev Tests successful unstaking when coverageRatio is less than 1e18
+    function testStakedmsUSDCoverageRatoSub1Fuzzing(uint256 newCoverageRatio) public {
+        newCoverageRatio = bound(newCoverageRatio, .1 * 1e18, .99 * 1e18);
+        uint256 depositAmount = 1000 ether;
+        uint256 cooldownAmount = 500 ether;
+        
+        // Setup: Deposit and start cooldown
+        deal(address(msUSDToken), alice, depositAmount);
+        vm.prank(alice);
+        msUSDToken.approve(address(smsUSD), depositAmount);
+        vm.prank(alice);
+        smsUSD.deposit(depositAmount, alice);
+        
+        vm.prank(alice);
+        smsUSD.cooldownAssets(cooldownAmount, alice);
+        
+        // Fast forward past cooldown period
+        vm.warp(block.timestamp + smsUSD.cooldownDuration() + 1);
+        
+        uint256 aliceBalanceBefore = msUSDToken.balanceOf(alice);
+        uint256 siloBalanceBefore = msUSDToken.balanceOf(address(silo));
+        uint256 vaultBalanceBefore = smsUSD.balanceOf(address(msUSDToken));
+        uint256 totalAssetsBefore = smsUSD.totalAssets();
+
+        // Set coverageRatio
+        vm.prank(owner);
+        smsUSD.setCoverageRatio(newCoverageRatio);
+        
+        // Unstake
+        vm.prank(alice);
+        smsUSD.unstake(alice);
+        
+        // Check assets were transferred back to alice
+        assertEq(msUSDToken.balanceOf(alice), (aliceBalanceBefore + cooldownAmount) * newCoverageRatio / 1e18);
+        assertEq(msUSDToken.balanceOf(address(silo)), siloBalanceBefore - cooldownAmount);
+        assertEq(smsUSD.balanceOf(address(msUSDToken)), vaultBalanceBefore);
+        assertEq(smsUSD.totalAssets(), totalAssetsBefore);
+        
+        // Check cooldown was reset
+        (uint104 cooldownEnd, uint256 underlyingAmount) = smsUSD.cooldowns(alice);
+        assertEq(cooldownEnd, 0);
+        assertEq(underlyingAmount, 0);
+    }
+
     /// @dev Tests that unstake reverts when cooldown period hasn't finished
     function testStakedmsUSDUnstakeRevertsWhenCooldownNotFinished() public {
         uint256 depositAmount = 1000 ether;

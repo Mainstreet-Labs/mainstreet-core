@@ -11,7 +11,7 @@ optimizer_runs = 200
 
 [etherscan]
 # This maps chain ID directly to the API key and URL
-57054 = { key = "${ETHERSCAN_API_KEY}", url = "https://api-testnet.sonicscan.org/api" }
+14601 = { key = "${ETHERSCAN_API_KEY}", url = "https://api-testnet.sonicscan.org/api" }
 146 = { key = "${ETHERSCAN_API_KEY}", url = "https://api.sonicscan.org/api" }
 
 [lint]

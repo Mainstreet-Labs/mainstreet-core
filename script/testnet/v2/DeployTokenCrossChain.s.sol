@@ -17,7 +17,7 @@ import "../../../test/utils/Constants.sol";
     export ETHERSCAN_API_KEY=<API_KEY>
     forge verify-contract \
         <CONTRACT_ADDRESS> \
-        --chain-id 57054 \
+        --chain-id 14601 \
         --watch \
         --verifier-url https://api-testnet.sonicscan.org/api \
         src/v2/msUSDV2.sol:msUSDV2 \
@@ -76,7 +76,7 @@ contract DeployTokenCrossChain is DeploymentUtility {
         allChains.push(NetworkData(
             {
                 chainName: "blaze", 
-                rpc_url: vm.envString("BLAZE_RPC_URL"), 
+                rpc_url: vm.envString("SONIC_TEST_RPC_URL"), 
                 lz_endpoint: BLAZE_LZ_ENDPOINT_V1, 
                 chainId: BLAZE_LZ_CHAIN_ID_V1,
                 mainChain: true

@@ -10,10 +10,10 @@ import {CustodianManager} from "../../src/CustodianManager.sol";
 import {FeeSilo} from "../../src/FeeSilo.sol";
 import "../../test/utils/Constants.sol";
 
-// forge script script/blaze/DeployProtocol.s.sol:DeployProtocol --broadcast --verify --chain-id 57054 -vvvv
+// forge script script/blaze/DeployProtocol.s.sol:DeployProtocol --broadcast --verify --chain-id 14601 -vvvv
 
-// msUSD Implementation: forge verify-contract 0xb2036B48C3c2D2E305004ec19767a67181392439 src/msUSD.sol:msUSD --chain-id 57054 --watch
-// feeSilo: forge verify-contract 0x0951F82B4250331ae3AFE2Fa0fb0563d664f2006 src/FeeSilo.sol:FeeSilo --chain-id 57054 --watch --constructor-args $(cast abi-encode "constructor(address, address, address[], uint256[])" 0xe0f9D2797082797Bb7361c6E26b42D68C9da5C56 0x12231E7FD7164613b911BBA5743210dAfF594482 "[0xe0f9D2797082797Bb7361c6E26b42D68C9da5C56]" "[1]")
+// msUSD Implementation: forge verify-contract 0xb2036B48C3c2D2E305004ec19767a67181392439 src/msUSD.sol:msUSD --chain-id 14601 --watch
+// feeSilo: forge verify-contract 0x0951F82B4250331ae3AFE2Fa0fb0563d664f2006 src/FeeSilo.sol:FeeSilo --chain-id 14601 --watch --constructor-args $(cast abi-encode "constructor(address, address, address[], uint256[])" 0xe0f9D2797082797Bb7361c6E26b42D68C9da5C56 0x12231E7FD7164613b911BBA5743210dAfF594482 "[0xe0f9D2797082797Bb7361c6E26b42D68C9da5C56]" "[1]")
 
 /**
  * @title DeployProtocol
@@ -22,7 +22,7 @@ import "../../test/utils/Constants.sol";
  */
 contract DeployProtocol is Script {
     uint256 public DEPLOYER_PRIVATE_KEY = vm.envUint("DEPLOYER_PRIVATE_KEY");
-    string public BLAZE_RPC_URL = vm.envString("BLAZE_RPC_URL");
+    string public SONIC_TEST_RPC_URL = vm.envString("SONIC_TEST_RPC_URL");
     address public INIT_OWNER = vm.envAddress("DEPLOYER_ADDRESS");
     
     address internal MOCK_USDC_TOKEN = 0xF877CfbAf9f9aD8CB4A34940E12a89bed07e4643; /// @dev assign
@@ -35,7 +35,7 @@ contract DeployProtocol is Script {
     address internal WHITELISTER = INIT_OWNER; /// @dev assign
 
     function setUp() public {
-        vm.createSelectFork(BLAZE_RPC_URL);
+        vm.createSelectFork(SONIC_TEST_RPC_URL);
     }
 
     function run() public {

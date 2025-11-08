@@ -42,15 +42,15 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
 
     /// @dev Tests that the StakedmsUSD contract can be properly initialized
     function testStakedmsUSDInitialize() public {
-        StakedmsUSD newImplementation = new StakedmsUSD();
-        
         ERC1967Proxy newProxy = new ERC1967Proxy(
-            address(newImplementation),
+            address(new StakedmsUSD()),
             abi.encodeWithSelector(
                 StakedmsUSD.initialize.selector,
                 address(msUSDToken),
                 admin,
-                owner
+                owner,
+                "Staked mainstreetUSD",
+                "sMSUSD"
             )
         );
         
@@ -58,8 +58,8 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
         
         assertEq(newSmsUSD.owner(), owner);
         assertEq(newSmsUSD.rewarder(), admin);
-        assertEq(newSmsUSD.name(), "Staked msUSD");
-        assertEq(newSmsUSD.symbol(), "smsUSD");
+        assertEq(newSmsUSD.name(), "Staked mainstreetUSD");
+        assertEq(newSmsUSD.symbol(), "sMSUSD");
         assertEq(address(newSmsUSD.asset()), address(msUSDToken));
     }
 
@@ -75,7 +75,9 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
                 StakedmsUSD.initialize.selector,
                 address(0),
                 admin,
-                owner
+                owner,
+                "Staked msUSD",
+                "smsUSD"
             )
         );
 
@@ -87,7 +89,9 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
                 StakedmsUSD.initialize.selector,
                 address(msUSDToken),
                 address(0),
-                owner
+                owner,
+                "Staked msUSD",
+                "smsUSD"
             )
         );
 
@@ -99,7 +103,9 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
                 StakedmsUSD.initialize.selector,
                 address(msUSDToken),
                 admin,
-                address(0)
+                address(0),
+                "Staked msUSD",
+                "smsUSD"
             )
         );
     }
@@ -377,5 +383,17 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
         vm.prank(owner);
         vm.expectRevert(IStakedmsUSD.InvalidToken.selector);
         smsUSD.rescueTokens(address(msUSDToken), 100, alice);
+    }
+
+    function testStakedmsUSDBurnAsset() public {
+        uint256 amount = 100 ether;
+        deal(address(msUSDToken), address(smsUSD), amount);
+
+        assertEq(smsUSD.totalAssets(), amount);
+
+        vm.prank(owner);
+        smsUSD.burnAsset(amount);
+
+        assertEq(smsUSD.totalAssets(), 0);
     }
 }

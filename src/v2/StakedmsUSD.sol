@@ -15,7 +15,7 @@ import {msUSDSilo} from "./msUSDSilo.sol";
  * @title StakedmsUSD
  * @author Mainstreet Labs
  * @notice A liquid staking token for msUSD that enables users to earn yield while maintaining liquidity.
- * Users can stake msUSD tokens to receive smsUSD shares that appreciate in value as protocol rewards
+ * Users can stake msUSD tokens to receive StakedmsUSD shares that appreciate in value as protocol rewards
  * are distributed. The contract implements a flexible cooldown system that can be enabled or disabled
  * to control withdrawal mechanics based on market conditions and protocol needs.
  * @dev This contract extends ERC4626 to provide vault functionality with dual operational modes:
@@ -34,7 +34,7 @@ import {msUSDSilo} from "./msUSDSilo.sol";
  * The contract features:
  * - Donation attack protection via minimum shares requirement
  * - Upgradeable implementation using UUPS pattern
- * - Owner-controlled configuration of cooldown duration and key addresses
+ * - Owner-controlled configuration of cooldown duration, key addresses, and coverage ratio
  */
 contract StakedmsUSD is
     UUPSUpgradeable,
@@ -75,6 +75,13 @@ contract StakedmsUSD is
     /// @notice Stores the % of each rewards mint that is sent to feeSilo.
     uint16 public taxRate;
 
+    /// @notice If true, deposits are enabled.
+    bool public depositsEnabled;
+
+    /// @notice Default is 1e18 which allows redeemer to collect 100% of their redemption post-cooldown.
+    /// If <1e18, the redeemer cannot claim their total redemption of tokens.
+    uint256 public coverageRatio;
+
     /* ------------- MODIFIERS ------------- */
 
     /// @notice ensure input amount nonzero
@@ -101,6 +108,12 @@ contract StakedmsUSD is
         _;
     }
 
+    /// @notice Ensures deposits are enabled
+    modifier ensureDepositsEnabled() {
+        if (!depositsEnabled) revert DepositsDisabled();
+        _;
+    }
+
     /* ------------- CONSTRUCTOR ------------- */
 
     constructor() {
@@ -116,17 +129,21 @@ contract StakedmsUSD is
     function initialize(
         address _asset,
         address _initialRewarder,
-        address _owner
+        address _owner,
+        string calldata _name,
+        string calldata _symbol
     ) public initializer {
         if (_owner == address(0) || _initialRewarder == address(0) || address(_asset) == address(0)) {
             revert InvalidZeroAddress();
         }
 
-        __ERC20_init("Staked msUSD", "smsUSD");
+        __ERC20_init(_name, _symbol);
         __ERC4626_init(IERC20(_asset));
         __Ownable_init(_owner);
         __ReentrancyGuard_init();
 
+        coverageRatio = 1e18;
+        depositsEnabled = true;
         cooldownDuration = 7 days;
         rewarder = _initialRewarder;
     }
@@ -148,6 +165,31 @@ contract StakedmsUSD is
         }
         ImsUSDV2(asset()).mint(address(this), amount);
         emit RewardsReceived(amount);
+    }
+
+    /**
+     * @notice Allows the owner to toggle the status stored in `depositsEnabled`.
+     * @dev When the boolean stored in `depositsEnabled` is true, deposits are enabled.
+     * Conversely, when the status is set to false, deposits are disabled.
+     */
+    function toggleDeposits() external onlyOwner {
+        depositsEnabled = !depositsEnabled;
+        emit DepositsToggled(depositsEnabled);
+    }
+
+    /**
+     * @notice Allows the owner to update the value stored in `coverageRatio`.
+     * @dev If the value is set to <1e18, the total amount of redeemable tokens post-cooldown
+     * will be less than what was initially redeemable. Only used in serious situations when the
+     * system is not fully collateralized. 
+     * @dev If 1e18 -> Redeemer can redeem 100% post-cooldown. Conversly, if set to .9 * 1e18, 
+     * only 90% of the requested tokens are redeemable, until the ratio is updated again.
+     * @param _ratio New converage ratio
+     */
+    function setCoverageRatio(uint256 _ratio) external onlyOwner {
+        if (_ratio == coverageRatio) revert AlreadySet();
+        emit CoverageRatioUpdated(_ratio);
+        coverageRatio = _ratio;
     }
 
     /**
@@ -218,24 +260,44 @@ contract StakedmsUSD is
     }
 
     /**
+     * @notice Allows the owner to burn tokens from the vault, dropping price
+     * @dev Only used in situations of undercollateralization
+     * @param amount Amount of tokens to burn from the vault
+     */
+    function burnAsset(uint256 amount) external onlyOwner {
+        emit AssetBurned(amount);
+        ImsUSDV2(asset()).burn(amount);
+    }
+
+    /**
      * @notice Allows users to claim their assets after the cooldown period has ended
      * @dev Can be called by anyone to claim their own assets. The cooldown must have expired
      * and the user must have assets in cooldown. Transfers assets from silo to receiver.
      * @param receiver Address to send the assets to
      */
-    function unstake(address receiver) external {
+    function unstake(address receiver) nonReentrant external {
         UserCooldown storage userCooldown = cooldowns[msg.sender];
         uint256 assets = userCooldown.underlyingAmount;
 
         if (userCooldown.cooldownEnd > block.timestamp) revert CooldownNotFinished(block.timestamp, userCooldown.cooldownEnd);
         if (assets == 0) revert NothingToUnstake();
+        if (coverageRatio == 0) revert CoverageRatioZero();
 
         emit Unstake(msg.sender, receiver, assets);
 
         userCooldown.cooldownEnd = 0;
         userCooldown.underlyingAmount = 0;
 
-        silo.withdraw(receiver, assets);
+        uint256 amountForRedeemer = assets;
+
+        if (coverageRatio != 1e18) {
+            amountForRedeemer = assets * coverageRatio / 1e18;
+            uint256 amountForBurn = assets - amountForRedeemer;
+            silo.withdraw(address(this), amountForBurn);
+            ImsUSDV2(asset()).burn(amountForBurn);
+        }
+
+        silo.withdraw(receiver, amountForRedeemer);
     }
 
     /**
@@ -295,6 +357,21 @@ contract StakedmsUSD is
         emit CooldownDurationUpdated(previousDuration, cooldownDuration);
     }
 
+    /**
+     * @notice Sets the cooldown endtime for an existing cooldown
+     * @dev Only callable by the contract owner.
+     * @param account Account with existing cooldown
+     * @param newCooldownEnd Account with existing cooldown
+     */
+    function updateExistingCooldown(address account, uint256 newCooldownEnd) external onlyOwner {
+        UserCooldown storage userCooldown = cooldowns[account];
+        if (userCooldown.cooldownEnd == 0) revert InvalidCooldown();
+
+        emit CooldownEndtimeUpdated(account, userCooldown.cooldownEnd, newCooldownEnd);
+
+        userCooldown.cooldownEnd = uint104(newCooldownEnd);
+    }
+
     /* ------------- PUBLIC ------------- */
 
     /**
@@ -346,7 +423,7 @@ contract StakedmsUSD is
         address receiver,
         uint256 assets,
         uint256 shares
-    ) internal override nonReentrant notZero(assets) notZero(shares) {
+    ) internal override nonReentrant ensureDepositsEnabled notZero(assets) notZero(shares) {
         super._deposit(caller, receiver, assets, shares);
         _checkMinShares();
     }

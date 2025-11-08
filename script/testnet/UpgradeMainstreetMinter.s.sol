@@ -12,7 +12,7 @@ import "../../test/utils/Constants.sol";
     --broadcast \
     --verify \
     --verifier-url https://api-testnet.sonicscan.org/api \
-    --chain-id 57054 \
+    --chain-id 14601 \
     -vvvv
  */
 
@@ -23,13 +23,13 @@ import "../../test/utils/Constants.sol";
  */
 contract UpgradeMainstreetMinter is Script {
     uint256 public DEPLOYER_PRIVATE_KEY = vm.envUint("DEPLOYER_PRIVATE_KEY");
-    string public BLAZE_RPC_URL = vm.envString("BLAZE_RPC_URL");
+    string public SONIC_TEST_RPC_URL = vm.envString("SONIC_TEST_RPC_URL");
     
     MainstreetMinter internal constant MS_MINTER = MainstreetMinter(0xE32E43266c875Bc67AE4C56F2291Acb3Bcea2aA5); /// @dev assign
     address internal constant MSUSD = 0x979eF4945Ed825140cdD1C325BcebdF80692f46A; /// @dev assign
 
     function setUp() public {
-        vm.createSelectFork(BLAZE_RPC_URL);
+        vm.createSelectFork(SONIC_TEST_RPC_URL);
     }
 
     function run() public {

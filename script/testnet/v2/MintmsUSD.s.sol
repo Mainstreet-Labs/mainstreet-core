@@ -14,7 +14,7 @@ import {MainstreetMinter} from "../../../src/MainstreetMinter.sol";
  */
 contract MintMsUSD is Script {
     uint256 public DEPLOYER_PRIVATE_KEY = vm.envUint("DEPLOYER_PRIVATE_KEY");
-    string public BLAZE_RPC_URL = vm.envString("BLAZE_RPC_URL");
+    string public SONIC_TEST_RPC_URL = vm.envString("SONIC_TEST_RPC_URL");
     
     // Contract addresses
     IERC20 public constant MOCK_USDC = IERC20(0xF877CfbAf9f9aD8CB4A34940E12a89bed07e4643); /// @dev assign
@@ -24,7 +24,7 @@ contract MintMsUSD is Script {
     uint256 public constant MINT_AMOUNT = 1000 * 1e6; // 1000 USDC (6 decimals)
 
     function setUp() public {
-        vm.createSelectFork(BLAZE_RPC_URL);
+        vm.createSelectFork(SONIC_TEST_RPC_URL);
     }
 
     function run() public {

@@ -18,7 +18,7 @@ import "../../../test/utils/Constants.sol";
     --broadcast \
     --verify \
     --verifier-url https://api-testnet.sonicscan.org/api \
-    --chain-id 57054 \
+    --chain-id 14601 \
     -vvvv
 
     == Logs ==
@@ -42,7 +42,7 @@ contract DeployStakedmsUSD is Script {
     address internal WHITELISTER = INIT_OWNER; /// @dev assign
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("BLAZE_RPC_URL"));
+        vm.createSelectFork(vm.envString("SONIC_TEST_RPC_URL"));
     }
 
     function run() public {

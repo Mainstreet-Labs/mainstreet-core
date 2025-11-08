@@ -40,10 +40,9 @@ contract BaseSetupV2 is Actors {
 
         _createAddresses();
 
-        address[] memory distributors = new address[](2);
+        address[] memory distributors = new address[](1);
         distributors[0] = address(2);
-
-        uint256[] memory ratios = new uint256[](2);
+        uint256[] memory ratios = new uint256[](1);
         ratios[0] = 1;
 
         // ~ Deploy Contracts ~
@@ -67,7 +66,9 @@ contract BaseSetupV2 is Actors {
                 StakedmsUSD.initialize.selector,
                 address(msUSDToken),
                 admin, 
-                owner
+                owner,
+                "Staked msUSD",
+                "smsUSD"
             )
         );
         smsUSD = StakedmsUSD(address(StakedmsUSDProxy));

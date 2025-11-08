@@ -5,9 +5,9 @@ import {console2, Script} from "forge-std/Script.sol";
 import {msUSD} from "../../src/msUSD.sol";
 import "../../test/utils/Constants.sol";
 
-// forge script script/blaze/UpgradeMainstreetUSD.s.sol:UpgradeMainstreetUSD --broadcast --verify --chain-id 57054 -vvvv
+// forge script script/blaze/UpgradeMainstreetUSD.s.sol:UpgradeMainstreetUSD --broadcast --verify --chain-id 14601 -vvvv
 
-// msUSD Implementation: forge verify-contract <CONTRACT_ADDRESS> src/msUSD.sol:msUSD --chain-id 57054 --watch
+// msUSD Implementation: forge verify-contract <CONTRACT_ADDRESS> src/msUSD.sol:msUSD --chain-id 14601 --watch
 
 /**
  * @title UpgradeMainstreetUSD
@@ -16,12 +16,12 @@ import "../../test/utils/Constants.sol";
  */
 contract UpgradeMainstreetUSD is Script {
     uint256 public DEPLOYER_PRIVATE_KEY = vm.envUint("DEPLOYER_PRIVATE_KEY");
-    string public BLAZE_RPC_URL = vm.envString("BLAZE_RPC_URL");
+    string public SONIC_TEST_RPC_URL = vm.envString("SONIC_TEST_RPC_URL");
     
     msUSD internal constant MSUSD = msUSD(0x12231E7FD7164613b911BBA5743210dAfF594482);
 
     function setUp() public {
-        vm.createSelectFork(BLAZE_RPC_URL);
+        vm.createSelectFork(SONIC_TEST_RPC_URL);
     }
 
     function run() public {

@@ -17,7 +17,7 @@ import "../../../test/utils/Constants.sol";
     export ETHERSCAN_API_KEY=<API_KEY>
     forge verify-contract \
         <CONTRACT_ADDRESS> \
-        --chain-id 57054 \
+        --chain-id 14601 \
         --watch \
         --verifier-url https://api-testnet.sonicscan.org/api \
         src/v2/msUSDV2.sol:msUSDV2 \

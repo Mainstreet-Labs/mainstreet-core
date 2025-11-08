@@ -30,6 +30,14 @@ interface IStakedmsUSD {
     event Unstake(address caller, address receiver, uint256 assets);
     /// @notice Event emitted when the tax rate is updated.
     event TaxRateUpdated(uint16);
+    /// @notice Event emitted when the boolean stored in depositsEnabled is updated
+    event DepositsToggled(bool);
+    /// @notice Event emitted when `coverageRatio` is updated.
+    event CoverageRatioUpdated(uint256);
+    /// @notice Event emitted when `burnAsset` is executed.
+    event AssetBurned(uint256);
+    /// @notice Event emitted when `updateExistingCooldown` is executed.
+    event CooldownEndtimeUpdated(address account, uint256 oldTime, uint256 newTime);
 
     // Errors //
     /// @notice Error emitted shares or assets equal zero.
@@ -58,6 +66,10 @@ interface IStakedmsUSD {
     error CooldownNotFinished(uint256 currentTimestamp, uint256 endTimestamp);
     /// @notice Error emitted when a user attempts to unstake a cooldown of amount 0
     error NothingToUnstake();
+    /// @notice Error emitted when a deposit is executed when deposits are disabled
+    error DepositsDisabled();
+    /// @notice Error emitted when an unstake is performed while `coverageRatio` is set to 0.
+    error CoverageRatioZero();
 
     function mintRewards(uint256 amount) external;
 

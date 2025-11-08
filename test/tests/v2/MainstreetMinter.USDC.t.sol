@@ -91,6 +91,29 @@ contract MainstreetMinterUSDCIntegrationTestV2 is BaseSetupV2 {
         assertApproxEqAbs(msUSDToken.balanceOf(bob), quoted, 1);
     }
 
+    function testMinterUSDCMintZeroTax() public {
+        //vm.prank(owner);
+        //msMinter.updateTax(0);
+
+        uint256 amount = 10 * 1e6;
+        _dealUSDC(bob, amount);
+
+        uint256 preBal = IERC20(SONIC_USDC).balanceOf(bob);
+        uint256 quoted = msMinter.quoteMint(SONIC_USDC, amount);
+        assertNotEq(quoted, 0);
+        assertEq(quoted, 10 ether);
+
+        // taker
+        vm.startPrank(bob);
+        IERC20(SONIC_USDC).approve(address(msMinter), amount);
+        msMinter.mint(SONIC_USDC, amount, amount - 1);
+        vm.stopPrank();
+
+        assertEq(IERC20(SONIC_USDC).balanceOf(bob), preBal - amount);
+        assertApproxEqAbs(IERC20(SONIC_USDC).balanceOf(address(msMinter)), amount, 1);
+        assertApproxEqAbs(msUSDToken.balanceOf(bob), quoted, 1);
+    }
+
     function testMinterUSDCMintFuzzing(uint256 amount) public {
         vm.assume(amount > 0.000000000001e18 && amount < 100_000 * 1e6);
         _dealUSDC(bob, amount);
