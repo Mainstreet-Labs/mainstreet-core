@@ -15,7 +15,7 @@ import "../../../test/utils/Constants.sol";
 contract BridgeEthSepToBaseSep is Script {
     uint256 public DEPLOYER_PRIVATE_KEY = vm.envUint("DEPLOYER_PRIVATE_KEY");
     
-    msUSDV2 public msUSDToken = msUSDV2(0x22Fd57e5653D1B7F3f820889ef6F3ea127f9826e); /// @dev assign
+    msUSDV2 public msUSDToken = msUSDV2(0x4ba01f22827018b4772CD326C7627FB4956A7C00); /// @dev assign
     uint256 public amount = 1 ether;
     
     // Target address on Sepolia
@@ -54,18 +54,24 @@ contract BridgeEthSepToBaseSep is Script {
         
         // Check account has enough ETH for fees
         require(account.balance >= nativeFee, "Insufficient ETH for LayerZero fees");
+
+        uint256 msUSDPreBal = msUSDToken.balanceOf(address(msUSDToken));
+        uint256 msUSDPreSupply = msUSDToken.totalSupply();
         
-        // Bridge tokens from Blaze to Sepolia
+        // Bridge tokens from ETH Sepolia to Base Sepolia
         // Note: msUSDV2 uses transfer-based bridging, so tokens will be transferred to the contract
         msUSDToken.sendFrom{value: nativeFee}(
-            account,                   // from
-            BASE_SEPOLIA_LZ_CHAIN_ID_V1,     // dstChainId  
-            toAddressBytes,             // toAddress
-            amount,                     // amount
-            payable(account),          // refundAddress
-            address(0),                 // zroPaymentAddress (not using ZRO)
-            bytes("")                   // adapterParams (empty for default)
+            account,                     // from
+            BASE_SEPOLIA_LZ_CHAIN_ID_V1, // dstChainId  
+            toAddressBytes,              // toAddress
+            amount,                      // amount
+            payable(account),            // refundAddress
+            address(0),                  // zroPaymentAddress (not using ZRO)
+            bytes("")                    // adapterParams (empty for default)
         );
+
+        assert(msUSDToken.totalSupply() == msUSDPreSupply);
+        assert(msUSDToken.balanceOf(address(msUSDToken)) == msUSDPreBal + amount);
         
         vm.stopBroadcast();
     }

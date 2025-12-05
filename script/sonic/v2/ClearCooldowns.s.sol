@@ -134,7 +134,7 @@ contract ClearCooldowns is Script {
                 console2.log(uint256(cooldownEnd));
                 console2.log(underlyingAmount);
 
-                SMSUSD.updateExistingCooldown(account, block.timestamp);
+                SMSUSD.updateExistingCooldown(account, uint104(block.timestamp));
 
                 (cooldownEnd,) = SMSUSD.cooldowns(account);
                 assert(cooldownEnd == block.timestamp);

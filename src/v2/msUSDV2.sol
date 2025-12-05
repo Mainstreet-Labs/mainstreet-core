@@ -50,16 +50,22 @@ contract msUSDV2 is UUPSUpgradeable, OFTUpgradeable, ImsUSDV2 {
 
     /**
      * @notice Initializes msUSDV2's inherited upgradeables.
+     * @dev This initializer allows us to make an initial mint of tokens to the home-chain contract.
+     * This is necessary in the event we're migrating from a legacy home-chain so totalSupply is maintained.
      * @param owner Initial owner of contract.
      * @param name Name of wrapped token.
      * @param symbol Symbol of wrapped token.
+     * @param initialMint Initial amount of tokens to mint to this contract.
      */
     function initialize(
         address owner,
         string memory name,
-        string memory symbol
+        string memory symbol,
+        uint256 initialMint
     ) external initializer {
         __OFT_init(owner, name, symbol);
+        supplyLimit = 10_000_000 ether;
+        if (initialMint != 0) _mint(address(this), initialMint);
     }
 
     /// @dev Overrides _update from ERC20Upgradeable.

@@ -188,6 +188,7 @@ contract StakedmsUSD is
      */
     function setCoverageRatio(uint256 _ratio) external onlyOwner {
         if (_ratio == coverageRatio) revert AlreadySet();
+        if (_ratio > 1e18) revert InvalidRatio();
         emit CoverageRatioUpdated(_ratio);
         coverageRatio = _ratio;
     }
@@ -283,19 +284,19 @@ contract StakedmsUSD is
         if (assets == 0) revert NothingToUnstake();
         if (coverageRatio == 0) revert CoverageRatioZero();
 
-        emit Unstake(msg.sender, receiver, assets);
-
         userCooldown.cooldownEnd = 0;
         userCooldown.underlyingAmount = 0;
 
         uint256 amountForRedeemer = assets;
 
-        if (coverageRatio != 1e18) {
+        if (coverageRatio < 1e18) {
             amountForRedeemer = assets * coverageRatio / 1e18;
             uint256 amountForBurn = assets - amountForRedeemer;
             silo.withdraw(address(this), amountForBurn);
             ImsUSDV2(asset()).burn(amountForBurn);
         }
+
+        emit Unstake(msg.sender, receiver, assets, amountForRedeemer);
 
         silo.withdraw(receiver, amountForRedeemer);
     }
@@ -363,13 +364,13 @@ contract StakedmsUSD is
      * @param account Account with existing cooldown
      * @param newCooldownEnd Account with existing cooldown
      */
-    function updateExistingCooldown(address account, uint256 newCooldownEnd) external onlyOwner {
+    function updateExistingCooldown(address account, uint104 newCooldownEnd) external onlyOwner {
         UserCooldown storage userCooldown = cooldowns[account];
         if (userCooldown.cooldownEnd == 0) revert InvalidCooldown();
 
         emit CooldownEndtimeUpdated(account, userCooldown.cooldownEnd, newCooldownEnd);
 
-        userCooldown.cooldownEnd = uint104(newCooldownEnd);
+        userCooldown.cooldownEnd = newCooldownEnd;
     }
 
     /* ------------- PUBLIC ------------- */

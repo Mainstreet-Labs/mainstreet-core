@@ -39,11 +39,11 @@ contract msUSDV2Test is BaseSetupV2 {
         vm.store(address(instance1), slot, 0);
         vm.store(address(instance2), slot, 0);
 
-        instance1.initialize(owner, "msUSD", "msUSD");
+        instance1.initialize(owner, "msUSD", "msUSD", 0);
         assertEq(msUSDToken.name(), "msUSD");
         assertEq(msUSDToken.symbol(), "msUSD");
 
-        instance2.initialize(owner, "msUSD", "msUSD");
+        instance2.initialize(owner, "msUSD", "msUSD", 0);
         assertEq(msUSDToken.name(), "msUSD");
         assertEq(msUSDToken.symbol(), "msUSD");
     }

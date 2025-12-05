@@ -2,66 +2,79 @@
 pragma solidity ^0.8.19;
 
 import {console} from "forge-std/Script.sol";
-import {DeploymentUtility} from "../../utils/DeploymentUtility.sol";
+import {DeploymentUtility} from "../utils/DeploymentUtility.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
-import {msUSDV2} from "../../../src/v2/msUSDV2.sol";
-import {msUSDV2Satellite} from "../../../src/v2/msUSDV2Satellite.sol";
-import "../../../test/utils/Constants.sol";
+import {msUSDV2} from "../../src/v2/msUSDV2.sol";
+import {msUSDV2Satellite} from "../../src/v2/msUSDV2Satellite.sol";
+import {msUSDV2Sonic} from "../../src/v2/msUSDV2Sonic.sol";
+import "../../test/utils/Constants.sol";
 
 /** 
+    @dev Architecture:
+    ETH: msUSDV2 (Home Chain)
+    Sonic: msUSDV2Sonic (Sonic legacy version)
+    Other: msUSDV2Satellite
+
     @dev To run: 
-    forge script script/testnet/v2/DeployTokenNotBlaze.s.sol:DeployTokenNotBlaze --broadcast \
-    --verify --verifier-url https://api-sepolia.basescan.org/api -vvvv
+    forge script script/ethereum/DeploymsUSDV2CrossChain.s.sol:DeploymsUSDV2CrossChain --broadcast --verify -vvvv
 
     @dev To verify msUSDV2:
     export ETHERSCAN_API_KEY=<API_KEY>
     forge verify-contract \
         <CONTRACT_ADDRESS> \
-        --chain-id 14601 \
+        --chain-id 1 \
+        --verifier custom \
         --watch \
-        --verifier-url https://api-testnet.sonicscan.org/api \
-        src/v2/msUSDV2.sol:msUSDV2 \
-        --constructor-args $(cast abi-encode "constructor(address)" 0x83c73Da98cf733B03315aFa8758834b36a195b87)
+        --verifier-url "https://api.etherscan.io/v2/api?chainid=1" \
+        src/v2/msUSDV2.sol:msUSDV2
 
     @dev To verify msUSDV2Satellite:
     export ETHERSCAN_API_KEY=<API_KEY>
     forge verify-contract \
         <CONTRACT_ADDRESS> \
-        --chain-id 11155111 \
+        --chain-id <CHAIN_ID> \
+        --verifier custom \
         --watch \
-        --verifier-url https://api-sepolia.etherscan.io/api \
+        --verifier-url "https://api.etherscan.io/v2/api?chainid=<CHAIN_ID>" \
         src/v2/msUSDV2Satellite.sol:msUSDV2Satellite \
-        --constructor-args $(cast abi-encode "constructor(address)" 0xae92d5aD7583AD66E49A0c67BAd18F6ba52dDDc1)
+        --constructor-args $(cast abi-encode "constructor(address)" <LZ_ENDPOINT>)
 
-    @dev To verify Proxy manually (Etherscan):
+    @dev To verify Proxies:
     export ETHERSCAN_API_KEY=<API_KEY>
-    forge verify-contract <CONTRACT_ADDRESS> --chain-id <CHAIN_ID> --watch \
-    lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy \
-    --constructor-args $(cast abi-encode "constructor(address,bytes)" <EMPTY_UUPS> 0x) --verifier etherscan
+    forge verify-contract \
+        <CONTRACT_ADDRESS> \
+        --chain-id <CHAIN_ID> \
+        --watch \
+        --verifier custom \
+        --verifier-url "https://api.etherscan.io/v2/api?chainid=<CHAIN_ID>" \
+        lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy
 
-    @dev To verify msUSDV2Satellite manually (Etherscan):
-    export ETHERSCAN_API_KEY=<API_KEY>
-    forge verify-contract <CONTRACT_ADDRESS> --chain-id <CHAIN_ID> --watch \
-    src/v2/msUSDV2Satellite.sol:msUSDV2Satellite --constructor-args \
-    $(cast abi-encode "constructor(address)" <LZ_ENDPOINT_ADDRESS>) --verifier etherscan
+    forge verify-contract \
+        0x4ba01f22827018b4772CD326C7627FB4956A7C00 \
+        --chain-id 1 \
+        --watch \
+        --verifier custom \
+        --verifier-url "https://api.etherscan.io/v2/api?chainid=1" \
+        lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy
 
-    @dev Deployment
+    @dev Deployment 12/4/25
     == Logs ==
-        Base Sepolia:
-        msUSDV2 deployed to 0x82a19255429d17b9fb2f947E8F71d542CcDF8164
-        Empty UUPS implementation contract deployed to 0xc595a90921e4350Dd605B7A5C4928bBBF34370d1
-        msUSDV2 proxy deployed to 0x22Fd57e5653D1B7F3f820889ef6F3ea127f9826e
-        Ethereum Sepolia:
-        msUSDV2Satellite deployed to 0xE865943a7917BD4897576919396e5CdFAC49d6f3
-        Empty UUPS implementation contract deployed to 0xc595a90921e4350Dd605B7A5C4928bBBF34370d1
-        msUSDV2 proxy deployed to 0x22Fd57e5653D1B7F3f820889ef6F3ea127f9826e
+        msUSDV2 deployed to 0x7Ea01d56932F82370b11686dEe4d8Fa777845bd8
+        Empty UUPS implementation contract deployed to 0xc05Fb730FFC1099464118A705aCd2BF5d81844cC
+        msUSDV2 proxy deployed to 0x4ba01f22827018b4772CD326C7627FB4956A7C00
 */
 
+interface IOFTCore {
+    function isTrustedRemote(uint16, bytes calldata) external view returns (bool);
+    function setTrustedRemoteAddress(uint16, bytes calldata) external;
+}
+
 /**
- * @title DeployTokenNotBlaze
- * @notice This script deploys a new instance of the msUSDV2 token to various testent chains
+ * @title DeploymsUSDV2CrossChain
+ * @notice This script deploys the protocol to various chains.
+ * @dev This script was written during the migration of Sonic as the legacy home-chain to Ethereum as the home-chain.
  */
-contract DeployTokenNotBlaze is DeploymentUtility {
+contract DeploymsUSDV2CrossChain is DeploymentUtility {
 
     // ~ Script Configure ~
 
@@ -69,36 +82,44 @@ contract DeployTokenNotBlaze is DeploymentUtility {
         string chainName;
         string rpc_url;
         address lz_endpoint;
+        address remoteAddress;
         uint16 chainId;
         bool mainChain;
     }
 
     NetworkData[] internal allChains;
 
-    string constant public NAME = "msUSD"; // TODO
-    string constant public SYMBOL = "msUSD"; // TODO
+    mapping(string rpc => uint256 forkId) internal forkIdTracker;
+
+    string constant public NAME = "msUSD"; /// @dev assign
+    string constant public SYMBOL = "msUSD"; /// @dev assign
+
+    address constant public MSUSD_SONIC = 0xE5Fb2Ed6832deF99ddE57C0b9d9A56537C89121D; /// @dev assign
+    uint256 constant public SONIC_TOTALSUPPLY = 1_894_785_811599046426739012;
 
     address immutable public DEPLOYER_ADDRESS = vm.envAddress("DEPLOYER_ADDRESS");
     uint256 immutable public DEPLOYER_PRIVATE_KEY = vm.envUint("DEPLOYER_PRIVATE_KEY");
 
     function setUp() public {
-        _setup("msUSD.testnet.deployment.2"); // TODO
+        _setup("msUSD.testnet.deployment.3"); /// @dev assign
 
         allChains.push(NetworkData(
             {
-                chainName: "Base Sepolia", 
-                rpc_url: vm.envString("BASE_SEPOLIA_RPC_URL"), 
-                lz_endpoint: BASE_SEPOLIA_LZ_ENDPOINT_V1, 
-                chainId: BASE_SEPOLIA_LZ_CHAIN_ID_V1,
+                chainName: "Ethereum", // 1
+                rpc_url: vm.envString("ETH_RPC_URL"), 
+                lz_endpoint: ETH_LZ_ENDPOINT_V1, 
+                remoteAddress: address(0),
+                chainId: ETH_LZ_CHAIN_ID_V1,
                 mainChain: true
             }
         ));
         allChains.push(NetworkData(
             {
-                chainName: "Ethereum Sepolia", 
-                rpc_url: vm.envString("SEPOLIA_RPC_URL"), 
-                lz_endpoint: SEPOLIA_LZ_ENDPOINT_V1, 
-                chainId: SEPOLIA_LZ_CHAIN_ID_V1,
+                chainName: "Sonic", // 146
+                rpc_url: vm.envString("SONIC_RPC_URL"), 
+                lz_endpoint: SONIC_LZ_ENDPOINT_V1,
+                remoteAddress: MSUSD_SONIC,
+                chainId: SONIC_LZ_CHAIN_ID_V1,
                 mainChain: false
             }
         ));
@@ -106,42 +127,53 @@ contract DeployTokenNotBlaze is DeploymentUtility {
 
     function run() public {
 
+        // Deploy
         uint256 len = allChains.length;
         for (uint256 i; i < len; ++i) {
 
             vm.createSelectFork(allChains[i].rpc_url);
             vm.startBroadcast(DEPLOYER_PRIVATE_KEY);
 
-            address msUSDTokenAddress;
-            if (allChains[i].mainChain) {
-                msUSDTokenAddress = _deploymsUSDV2(allChains[i].lz_endpoint);
-            }
-            else {
-                msUSDTokenAddress = _deploymsUSDV2ForSatellite(allChains[i].lz_endpoint);
+            forkIdTracker[allChains[i].rpc_url] = i;
+
+            if (allChains[i].chainId == SONIC_LZ_CHAIN_ID_V1) {
+                require(msUSDV2(allChains[i].remoteAddress).totalSupply() == SONIC_TOTALSUPPLY, "total supply doesnt match");
             }
 
-            msUSDV2 msUSDToken = msUSDV2(msUSDTokenAddress);
+            if (allChains[i].remoteAddress == address(0)) {
+
+                if (allChains[i].mainChain) {
+                    allChains[i].remoteAddress = _deploymsUSDV2(allChains[i].lz_endpoint);
+                }
+                else {
+                    allChains[i].remoteAddress = _deploymsUSDV2ForSatellite(allChains[i].lz_endpoint);
+                }
+            }
+
+            vm.stopBroadcast();
+        }
+
+        // Configure trusted remote
+        for (uint256 i; i < len; ++i) {
+
+            vm.selectFork(forkIdTracker[allChains[i].rpc_url]);
+            vm.startBroadcast(DEPLOYER_PRIVATE_KEY);
+
+            IOFTCore oftInterface = IOFTCore(allChains[i].remoteAddress);
 
             // set trusted remote address on all other chains for each token.
             for (uint256 j; j < len; ++j) {
                 if (i != j) {
                     if (
-                        !msUSDToken.isTrustedRemote(
-                            allChains[j].chainId, abi.encodePacked(msUSDTokenAddress, msUSDTokenAddress)
+                        !oftInterface.isTrustedRemote(
+                            allChains[j].chainId, abi.encodePacked(allChains[j].remoteAddress, allChains[i].remoteAddress)
                         )
                     ) {
-                        msUSDToken.setTrustedRemoteAddress(
-                            allChains[j].chainId, abi.encodePacked(msUSDTokenAddress)
+                        oftInterface.setTrustedRemoteAddress(
+                            allChains[j].chainId, abi.encodePacked(allChains[j].remoteAddress)
                         );
                     }
                 }
-            }
-
-            // mint tokens to deployer
-            if (allChains[i].mainChain) {
-                msUSDToken.setSupplyLimit(type(uint256).max);
-                msUSDToken.setMinter(DEPLOYER_ADDRESS);
-                msUSDToken.mint(DEPLOYER_ADDRESS, 1000 ether);
             }
 
             vm.stopBroadcast();
@@ -178,7 +210,7 @@ contract DeployTokenNotBlaze is DeploymentUtility {
             DEPLOYER_ADDRESS,
             NAME,
             SYMBOL,
-            0
+            SONIC_TOTALSUPPLY
         );
 
         proxyAddress = _deployProxy("msUSDV2", address(msUSDToken), init);

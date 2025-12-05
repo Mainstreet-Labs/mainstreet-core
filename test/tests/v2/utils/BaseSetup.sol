@@ -54,7 +54,8 @@ contract BaseSetupV2 is Actors {
                 msUSDV2.initialize.selector,
                 owner,
                 "msUSD", 
-                "msUSD"
+                "msUSD",
+                0
             )
         );
         msUSDToken = msUSDV2(address(msUSDTokenProxy));

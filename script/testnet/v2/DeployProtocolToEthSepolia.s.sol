@@ -15,34 +15,30 @@ import "../../../test/utils/Constants.sol";
 /**
     @dev To run: 
     forge script \
-    script/testnet/v2/DeployProtocol.s.sol:DeployProtocol \
+    script/testnet/v2/DeployProtocolToEthSepolia.s.sol:DeployProtocolToEthSepolia \
     --broadcast \
     --verify \
-    --chain-id 14601 \
+    --chain-id 11155111 \
     -vvvv
- */
 
-/**
-    Deployment: 10/20/25
+    @dev Deployment 11/26/25:
     == Logs ==
-    msUSDV2: 0x12231E7FD7164613b911BBA5743210dAfF594482
-    smsUSD: 0x05a14954d10803DFB153F5861bB85C5CC55752a1
-    msUSDSilo: 0xDC551E0c4A5Cdd4ac9dB5dE95EE09E171Ff92d6B
-    FeeSilo: 0x2Cd83b6Ea21AceD2920f64DcC0cDf2eb63eE6A25
-    Minter: 0x860f818d960BA76E05197D96B6255b38736b9238
-    CustodianManager: 0xc80222Ff4A850a91EB9a7aD1D0AF5c4F1E0E785B
+        msUSDSilo: 0x67C1F63c07426f859824D1bD1F18c9C483f3d3BE
+        FeeSilo: 0x1F2aEdFBAb0Caa8ee6ac9353a1fca08e10B4090D
+        Minter: 0x2c63b5602528EB3F39A9EA1674669234CDc23a03
+        CustodianManager: 0x55950d5Ce6D2280bEc4E395C7eF35881da1FeaC8
  */
 
 /**
- * @title DeployProtocol
+ * @title DeployProtocolToEthSepolia
  * @author Mainstreet Labs
- * @notice This script deploys the msUSDV2 ecosystem to Blaze testnet.
+ * @notice This script deploys the msUSDV2 ecosystem to ETH Sepolia testnet.
  */
-contract DeployProtocol is Script {
+contract DeployProtocolToEthSepolia is Script {
     address public INIT_OWNER = vm.envAddress("DEPLOYER_ADDRESS");
     
-    address internal MOCK_USDC_TOKEN = 0xF877CfbAf9f9aD8CB4A34940E12a89bed07e4643; /// @dev assign
-    address internal MOCK_USDC_ORACLE = 0x0c21d59960d1bd0EeA0245044bF497E7017b739A; /// @dev assign
+    address internal MOCK_USDC_TOKEN = 0x098e47096856eb292D8B2D379b74E987E23CD2Af; /// @dev assign
+    address internal MOCK_USDC_ORACLE = 0x6f188821283923953121f35d74E69a5e73EA6871; /// @dev assign
 
     address internal QA = 0x1597E4B7cF6D2877A1d690b6088668afDb045763; /// @dev assign
 
@@ -51,12 +47,12 @@ contract DeployProtocol is Script {
 
     // contracts
 
-    msUSDV2 public msUSDToken;
-    StakedmsUSD public smsUSD;
+    msUSDV2 public msUSDToken = msUSDV2(0x4ba01f22827018b4772CD326C7627FB4956A7C00); /// @dev assign
+    StakedmsUSD public msY = StakedmsUSD(0x73D349A0b53Cdc24A4744329C426586b2869B1a0); /// @dev assign
     MainstreetMinter public msMinter;
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("SONIC_TEST_RPC_URL"));
+        vm.createSelectFork(vm.envString("SEPOLIA_RPC_URL"));
     }
 
     function run() public {
@@ -69,33 +65,8 @@ contract DeployProtocol is Script {
 
         // ~ Deploy Contracts ~
 
-        // Deploy msUSD
-        ERC1967Proxy msUSDTokenProxy = new ERC1967Proxy(
-            address(new msUSDV2(SONIC_LZ_ENDPOINT_V1)), // sonic endpoint for this deployment, blaze is no longer supported
-            abi.encodeWithSelector(
-                msUSDV2.initialize.selector,
-                INIT_OWNER,
-                "msUSD", 
-                "msUSD",
-                0
-            )
-        );
-        msUSDToken = msUSDV2(address(msUSDTokenProxy));
-
-        // Deploy StakedmsUSD
-        ERC1967Proxy StakedmsUSDProxy = new ERC1967Proxy(
-            address(new StakedmsUSD()),
-            abi.encodeWithSelector(
-                StakedmsUSD.initialize.selector,
-                address(msUSDToken),
-                ADMIN, // rewarder
-                INIT_OWNER
-            )
-        );
-        smsUSD = StakedmsUSD(address(StakedmsUSDProxy));
-
         // Deploy Silo
-        msUSDSilo silo = new msUSDSilo(address(smsUSD), address(msUSDToken));
+        msUSDSilo silo = new msUSDSilo(address(msY), address(msUSDToken));
 
         // Deploy feeSilo
         FeeSilo feeSilo = new FeeSilo(INIT_OWNER, address(msUSDToken), distributors, ratios);
@@ -121,12 +92,10 @@ contract DeployProtocol is Script {
 
         // ~ Config ~
 
-        // set silo on smsUSD
-        smsUSD.setSilo(address(silo));
-        smsUSD.setFeeSilo(address(feeSilo));
-        smsUSD.setCoverageRatio(1e18);
-        smsUSD.toggleDeposits();
-        smsUSD.setTaxRate(100); // set tax to 10%
+        // set silo on msY
+        msY.setSilo(address(silo));
+        msY.setFeeSilo(address(feeSilo));
+        msY.setTaxRate(100); // set tax to 10%
 
         // allow pm to mint
         msMinter.modifyWhitelist(QA, true);
@@ -145,15 +114,13 @@ contract DeployProtocol is Script {
 
         // Set configs on msUSD
         msUSDToken.setMinter(address(msMinter));
-        msUSDToken.setStakedmsUSD(address(smsUSD));
+        msUSDToken.setStakedmsUSD(address(msY));
         msUSDToken.setSupplyLimit(1_000_000 ether);
 
         makeSeedStake();
 
         // -- log addresses --
 
-        console2.log("msUSDV2:", address(msUSDToken));
-        console2.log("smsUSD:", address(smsUSD));
         console2.log("msUSDSilo:", address(silo));
         console2.log("FeeSilo:", address(feeSilo));
         console2.log("Minter:", address(msMinter));
@@ -170,9 +137,10 @@ contract DeployProtocol is Script {
         // Mint msUSD
         MockUSDC(MOCK_USDC_TOKEN).approve(address(msMinter), amount);
         msMinter.mint(MOCK_USDC_TOKEN, amount, quoted);
-        uint256 bal = msUSDToken.balanceOf(INIT_OWNER);
-        // Mint smsUSD
-        msUSDToken.approve(address(smsUSD), bal);
-        smsUSD.deposit(bal, INIT_OWNER);
+        // Mint msY
+        msUSDToken.approve(address(msY), quoted);
+        msY.deposit(quoted, INIT_OWNER);
+        // assertion
+        assert(msY.totalSupply() == 1 ether);
     }
 }

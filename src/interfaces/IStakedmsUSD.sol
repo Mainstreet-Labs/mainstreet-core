@@ -27,7 +27,7 @@ interface IStakedmsUSD {
     /// @notice Event emitted when the fee silo address is updated
     event FeeSiloUpdated(address);
     /// @notice Event emitted when a user unstakes
-    event Unstake(address caller, address receiver, uint256 assets);
+    event Unstake(address caller, address receiver, uint256 assets, uint256 amountForRedeemer);
     /// @notice Event emitted when the tax rate is updated.
     event TaxRateUpdated(uint16);
     /// @notice Event emitted when the boolean stored in depositsEnabled is updated
@@ -70,6 +70,8 @@ interface IStakedmsUSD {
     error DepositsDisabled();
     /// @notice Error emitted when an unstake is performed while `coverageRatio` is set to 0.
     error CoverageRatioZero();
+    /// @notice Error emitted when a coverageRatio is greater than 1e18, breaking logic.
+    error InvalidRatio();
 
     function mintRewards(uint256 amount) external;
 

@@ -159,7 +159,8 @@ contract DeployTokenCrossChain is DeploymentUtility {
             msUSDV2.initialize.selector,
             DEPLOYER_ADDRESS,
             NAME,
-            SYMBOL
+            SYMBOL,
+            0
         );
 
         proxyAddress = _deployProxy("msUSDV2", address(msUSDToken), init);
