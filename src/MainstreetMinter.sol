@@ -21,6 +21,7 @@ import {IOracle} from "./interfaces/IOracle.sol";
 import {IRebaseToken} from "./interfaces/IRebaseToken.sol";
 import {ElasticTokenMath} from "./libraries/ElasticTokenMath.sol";
 import {CommonValidations} from "./libraries/CommonValidations.sol";
+import {UpgraderTimelockUpgradeable} from "./helpers/v2/UpgraderTimelockUpgradeable.sol";
 
 /**
  * @title MainstreetMinter
@@ -42,7 +43,15 @@ import {CommonValidations} from "./libraries/CommonValidations.sol";
  * All operations use non-reentrant patterns and follow rigorous validation protocols to ensure
  * the integrity of the collateralization system.
  */
-contract MainstreetMinter is IMainstreetMinter, OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpgradeable, IErrors, IERC6372 {
+contract MainstreetMinter is
+    IMainstreetMinter,
+    OwnableUpgradeable,
+    ReentrancyGuardUpgradeable,
+    UUPSUpgradeable,
+    IErrors,
+    IERC6372,
+    UpgraderTimelockUpgradeable
+{
     using EnumerableSet for EnumerableSet.AddressSet;
     using Checkpoints for Checkpoints.Trace208;
     using CommonValidations for *;
@@ -127,6 +136,12 @@ contract MainstreetMinter is IMainstreetMinter, OwnableUpgradeable, ReentrancyGu
         _;
     }
 
+    /// @dev Ensures that the caller is the contract owner for timelocked functions.
+    modifier onlyTimelockOwner() override {
+        if (msg.sender != owner()) revert OwnableUnauthorizedAccount(msg.sender);
+        _;
+    }
+
     /**
      * @notice Initializes the MainstreetMinter contract with a reference to the msUSD token contract.
      * @param _msUSD The address of the msUSD token contract. This address is immutable and specifies the msUSD instance
@@ -138,7 +153,10 @@ contract MainstreetMinter is IMainstreetMinter, OwnableUpgradeable, ReentrancyGu
         _disableInitializers();
     }
 
-    function _authorizeUpgrade(address) internal override onlyOwner {}
+    function _authorizeUpgrade(address newImpl) internal override onlyOwner {
+        // will revert unless scheduled and delay passed
+        _checkTimelock(newImpl);
+    }
 
     /**
      * @notice Initializes the MainstreetMinter contract post-deployment to set up initial state and configurations.
@@ -160,6 +178,7 @@ contract MainstreetMinter is IMainstreetMinter, OwnableUpgradeable, ReentrancyGu
         __Ownable_init(initOwner);
         __ReentrancyGuard_init();
         __UUPSUpgradeable_init();
+        __UpgradeTimelock_init();
 
         admin = initAdmin;
         whitelister = initWhitelister;

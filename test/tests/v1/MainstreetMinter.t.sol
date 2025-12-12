@@ -39,12 +39,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         MainstreetMinter newMainstreetMinter = new MainstreetMinter(address(msUSDToken));
         ERC1967Proxy newMainstreetMinterProxy = new ERC1967Proxy(
             address(newMainstreetMinter),
-            abi.encodeWithSelector(MainstreetMinter.initialize.selector,
-                owner,
-                admin,
-                whitelister,
-                5 days
-            )
+            abi.encodeWithSelector(MainstreetMinter.initialize.selector, owner, admin, whitelister, 5 days)
         );
         newMainstreetMinter = MainstreetMinter(payable(address(newMainstreetMinterProxy)));
 
@@ -63,6 +58,9 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertNotEq(implementationSlot, bytes32(abi.encode(address(newImplementation))));
 
         vm.prank(owner);
+        msMinter.scheduleUpgrade(address(newImplementation));
+        vm.warp(block.timestamp + msMinter.upgradeDelay() + 1);
+        vm.prank(owner);
         msMinter.upgradeToAndCall(address(newImplementation), "");
 
         implementationSlot =
@@ -77,6 +75,9 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         vm.expectRevert();
         msMinter.upgradeToAndCall(address(newImplementation), "");
 
+        vm.prank(owner);
+        msMinter.scheduleUpgrade(address(newImplementation));
+        vm.warp(block.timestamp + msMinter.upgradeDelay() + 1);
         vm.prank(owner);
         msMinter.upgradeToAndCall(address(newImplementation), "");
     }
@@ -193,7 +194,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
 
         uint256 amount = 10 ether;
         deal(address(FRAX), bob, amount);
-        
+
         uint256 amountAfterTax = amount - (amount * msMinter.tax() / 1000);
         assertLt(amountAfterTax, amount);
 
@@ -231,7 +232,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
 
         vm.prank(owner);
         msMinter.updateTax(2); // .2% tax
-        
+
         uint256 amountAfterTax = amount - (amount * msMinter.tax() / 1000);
 
         assertLt(amountAfterTax, amount);
@@ -263,7 +264,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(FRAX.balanceOf(alice), 0);
         assertEq(FRAX.balanceOf(address(msMinter)), amount);
 
-        MainstreetMinter.RedemptionRequest[] memory requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        MainstreetMinter.RedemptionRequest[] memory requests =
+            msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 0);
 
         assertEq(msMinter.quoteRedeem(address(FRAX), alice, amount), amount);
@@ -338,7 +340,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(FRAX.balanceOf(alice), 0);
         assertEq(FRAX.balanceOf(address(msMinter)), amount);
 
-        MainstreetMinter.RedemptionRequest[] memory requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        MainstreetMinter.RedemptionRequest[] memory requests =
+            msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 0);
 
         // Alice executes requestTokens
@@ -404,7 +407,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(FRAX.balanceOf(alice), 0);
         assertEq(FRAX.balanceOf(address(msMinter)), amount);
 
-        MainstreetMinter.RedemptionRequest[] memory requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        MainstreetMinter.RedemptionRequest[] memory requests =
+            msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 0);
 
         // Alice executes requestTokens
@@ -473,7 +477,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(FRAX.balanceOf(alice), 0);
         assertEq(FRAX.balanceOf(address(msMinter)), amount);
 
-        MainstreetMinter.RedemptionRequest[] memory requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        MainstreetMinter.RedemptionRequest[] memory requests =
+            msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 0);
 
         // Alice executes requestTokens
@@ -530,7 +535,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(FRAX.balanceOf(alice), 0);
         assertEq(FRAX.balanceOf(address(msMinter)), amount);
 
-        MainstreetMinter.RedemptionRequest[] memory requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        MainstreetMinter.RedemptionRequest[] memory requests =
+            msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 0);
 
         assertEq(msMinter.quoteRedeem(address(FRAX), alice, amount), amount);
@@ -605,7 +611,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(FRAX.balanceOf(alice), 0);
         assertEq(FRAX.balanceOf(address(msMinter)), amount);
 
-        MainstreetMinter.RedemptionRequest[] memory requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        MainstreetMinter.RedemptionRequest[] memory requests =
+            msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 0);
 
         // Alice executes requestTokens
@@ -672,7 +679,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(FRAX.balanceOf(alice), 0);
         assertEq(FRAX.balanceOf(address(msMinter)), amount1 + amount2);
 
-        MainstreetMinter.RedemptionRequest[] memory requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        MainstreetMinter.RedemptionRequest[] memory requests =
+            msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 0);
 
         // Alice executes requestTokens 1
@@ -771,7 +779,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
 
         assertEq(msUSDToken.balanceOf(alice), amountFRAX * 2);
 
-        MainstreetMinter.RedemptionRequest[] memory requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        MainstreetMinter.RedemptionRequest[] memory requests =
+            msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 0);
 
         requests = msMinter.getRedemptionRequests(alice, address(USDCToken), 0, 10);
@@ -910,7 +919,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(FRAX.balanceOf(alice), 0);
         assertEq(FRAX.balanceOf(address(msMinter)), amount);
 
-        MainstreetMinter.RedemptionRequest[] memory requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        MainstreetMinter.RedemptionRequest[] memory requests =
+            msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 0);
 
         // Alice executes requestTokens
@@ -990,7 +1000,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(FRAX.balanceOf(alice), 0);
         assertEq(FRAX.balanceOf(address(msMinter)), amount);
 
-        MainstreetMinter.RedemptionRequest[] memory requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        MainstreetMinter.RedemptionRequest[] memory requests =
+            msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 0);
 
         // Alice executes requestTokens
@@ -1075,7 +1086,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(msUSDToken.balanceOf(alice), 0);
         assertEq(FRAX.balanceOf(alice), 0);
 
-        MainstreetMinter.RedemptionRequest[] memory requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        MainstreetMinter.RedemptionRequest[] memory requests =
+            msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 1);
         assertEq(requests[0].amount, amount);
         assertEq(requests[0].claimableAfter, block.timestamp + 5 days);
@@ -1142,7 +1154,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(FRAX.balanceOf(alice), 0);
         assertEq(FRAX.balanceOf(address(msMinter)), amount);
 
-        MainstreetMinter.RedemptionRequest[] memory requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        MainstreetMinter.RedemptionRequest[] memory requests =
+            msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 1);
         assertEq(requests[0].amount, amount);
         assertEq(requests[0].claimableAfter, block.timestamp + 5 days);
@@ -1268,7 +1281,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(FRAX.balanceOf(alice), 0);
         assertEq(FRAX.balanceOf(address(msMinter)), newBal);
 
-        MainstreetMinter.RedemptionRequest[] memory requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        MainstreetMinter.RedemptionRequest[] memory requests =
+            msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 1);
         assertEq(requests[0].amount, newBal);
         assertEq(requests[0].claimableAfter, block.timestamp + 5 days);
@@ -1345,7 +1359,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(FRAX.balanceOf(alice), 0);
         assertEq(FRAX.balanceOf(address(msMinter)), newBal);
 
-        MainstreetMinter.RedemptionRequest[] memory requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        MainstreetMinter.RedemptionRequest[] memory requests =
+            msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 1);
         assertEq(requests[0].amount, newBal);
         assertEq(requests[0].claimableAfter, block.timestamp + 5 days);
@@ -1425,7 +1440,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(FRAX.balanceOf(alice), 0);
         assertEq(FRAX.balanceOf(address(msMinter)), newBal);
 
-        MainstreetMinter.RedemptionRequest[] memory requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        MainstreetMinter.RedemptionRequest[] memory requests =
+            msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 1);
         assertEq(requests[0].amount, newBal);
         assertEq(requests[0].claimableAfter, block.timestamp + 5 days);
@@ -1738,15 +1754,15 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(msMinter.latestCoverageRatio(), 1 * 1e18);
         skip(10);
         vm.prank(admin);
-        msMinter.setCoverageRatio(.1 * 1e18);
-        assertEq(msMinter.latestCoverageRatio(), .1 * 1e18);
+        msMinter.setCoverageRatio(0.1 * 1e18);
+        assertEq(msMinter.latestCoverageRatio(), 0.1 * 1e18);
     }
 
     function testMinterCoverageRatioRestrictions() public {
         // only admin
         vm.prank(bob);
         vm.expectRevert(abi.encodeWithSelector(IMainstreetMinter.NotAdmin.selector, bob));
-        msMinter.setCoverageRatio(.1 * 1e18);
+        msMinter.setCoverageRatio(0.1 * 1e18);
 
         // ratio cannot be greater than 1e18
         vm.prank(admin);
@@ -1811,7 +1827,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         // config
 
         uint256 amount = 10 ether;
-        uint256 ratio = .9 ether; // 90%
+        uint256 ratio = 0.9 ether; // 90%
 
         vm.prank(address(msMinter));
         msUSDToken.mint(alice, amount);
@@ -1823,7 +1839,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(FRAX.balanceOf(alice), 0);
         assertEq(FRAX.balanceOf(address(msMinter)), amount);
 
-        MainstreetMinter.RedemptionRequest[] memory requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        MainstreetMinter.RedemptionRequest[] memory requests =
+            msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 0);
 
         // Alice executes requestTokens
@@ -1858,7 +1875,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         // config
 
         uint256 amount = 10 ether;
-        uint256 ratio = .9 ether; // 90%
+        uint256 ratio = 0.9 ether; // 90%
 
         vm.prank(address(msMinter));
         msUSDToken.mint(alice, amount);
@@ -1870,7 +1887,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(FRAX.balanceOf(alice), 0);
         assertEq(FRAX.balanceOf(address(msMinter)), amount);
 
-        MainstreetMinter.RedemptionRequest[] memory requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        MainstreetMinter.RedemptionRequest[] memory requests =
+            msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 0);
 
         // Alice executes requestTokens
@@ -1941,7 +1959,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
     }
 
     function testMinterClaimTokensCoverageRatioSub1Fuzzing(uint256 ratio) public {
-        ratio = bound(ratio, .01 ether, .9999 ether); // 1% -> 99.99%
+        ratio = bound(ratio, 0.01 ether, 0.9999 ether); // 1% -> 99.99%
 
         // config
 
@@ -1957,7 +1975,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         assertEq(FRAX.balanceOf(alice), 0);
         assertEq(FRAX.balanceOf(address(msMinter)), amount);
 
-        MainstreetMinter.RedemptionRequest[] memory requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        MainstreetMinter.RedemptionRequest[] memory requests =
+            msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 0);
 
         // Alice executes requestTokens
@@ -2033,16 +2052,17 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         uint256 amount = 10 ether;
 
         vm.prank(address(msMinter));
-        msUSDToken.mint(alice, amount*2);
-        deal(address(FRAX), address(msMinter), amount*2);
+        msUSDToken.mint(alice, amount * 2);
+        deal(address(FRAX), address(msMinter), amount * 2);
 
         // Pre-state check
 
-        assertEq(msUSDToken.balanceOf(alice), amount*2);
+        assertEq(msUSDToken.balanceOf(alice), amount * 2);
         assertEq(FRAX.balanceOf(alice), 0);
-        assertEq(FRAX.balanceOf(address(msMinter)), amount*2);
+        assertEq(FRAX.balanceOf(address(msMinter)), amount * 2);
 
-        MainstreetMinter.RedemptionRequest[] memory requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
+        MainstreetMinter.RedemptionRequest[] memory requests =
+            msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 0);
 
         // Alice executes requestTokens
@@ -2056,7 +2076,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
 
         assertEq(msUSDToken.balanceOf(alice), amount);
         assertEq(FRAX.balanceOf(alice), 0);
-        assertEq(FRAX.balanceOf(address(msMinter)), amount*2);
+        assertEq(FRAX.balanceOf(address(msMinter)), amount * 2);
 
         requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 1);
@@ -2073,8 +2093,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         // Update coverage ratio
 
         vm.prank(admin);
-        msMinter.setCoverageRatio(.9 ether);
-        assertEq(msMinter.latestCoverageRatio(), .9 ether);
+        msMinter.setCoverageRatio(0.9 ether);
+        assertEq(msMinter.latestCoverageRatio(), 0.9 ether);
 
         uint256 ratio = msMinter.latestCoverageRatio();
         uint256 amountAfterRatio = amount * ratio / 1e18;
@@ -2099,7 +2119,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
 
         assertEq(msUSDToken.balanceOf(alice), amount);
         assertEq(FRAX.balanceOf(alice), amountAfterRatio);
-        assertEq(FRAX.balanceOf(address(msMinter)), amount*2 - amountAfterRatio);
+        assertEq(FRAX.balanceOf(address(msMinter)), amount * 2 - amountAfterRatio);
 
         requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 1);
@@ -2124,7 +2144,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
 
         assertEq(msUSDToken.balanceOf(alice), 0);
         assertEq(FRAX.balanceOf(alice), amountAfterRatio);
-        assertEq(FRAX.balanceOf(address(msMinter)), amount*2 - amountAfterRatio);
+        assertEq(FRAX.balanceOf(address(msMinter)), amount * 2 - amountAfterRatio);
 
         requests = msMinter.getRedemptionRequests(alice, address(FRAX), 0, 10);
         assertEq(requests.length, 2);
@@ -2187,51 +2207,51 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
     function testMinterGetCoverageRatioAt() public {
         // Initial coverage ratio should be 1e18
         assertEq(msMinter.getCoverageRatioAt(uint48(block.timestamp)), 1e18);
-        
+
         // Test historical timestamp (before any checkpoints)
         assertEq(msMinter.getCoverageRatioAt(uint48(block.timestamp - 1000)), 0);
-        
+
         // Update coverage ratio and test
         skip(10);
         vm.prank(admin);
         msMinter.setCoverageRatio(0.5e18); // 50%
-        
+
         // Current timestamp should return new ratio
         assertEq(msMinter.getCoverageRatioAt(uint48(block.timestamp)), 0.5e18);
-        
+
         // Timestamp before the update should still return old ratio
         assertEq(msMinter.getCoverageRatioAt(uint48(block.timestamp - 5)), 1e18);
     }
 
     function testMinterGetCoverageRatioAtMultipleUpdates() public {
         uint48 timestamp1 = uint48(block.timestamp);
-        
+
         // First update
         skip(100);
         uint48 timestamp2 = uint48(block.timestamp);
         vm.prank(admin);
         msMinter.setCoverageRatio(0.8e18); // 80%
-        
+
         // Second update
         skip(200);
         uint48 timestamp3 = uint48(block.timestamp);
         vm.prank(admin);
         msMinter.setCoverageRatio(0.6e18); // 60%
-        
+
         // Third update
         skip(300);
         uint48 timestamp4 = uint48(block.timestamp);
         vm.prank(admin);
         msMinter.setCoverageRatio(1e18); // 100%
-        
+
         // Test all historical points
-        assertEq(msMinter.getCoverageRatioAt(timestamp1), 1e18);     // Initial
-        assertEq(msMinter.getCoverageRatioAt(timestamp2), 0.8e18);   // After first update
+        assertEq(msMinter.getCoverageRatioAt(timestamp1), 1e18); // Initial
+        assertEq(msMinter.getCoverageRatioAt(timestamp2), 0.8e18); // After first update
         assertEq(msMinter.getCoverageRatioAt(timestamp2 + 50), 0.8e18); // Between updates
-        assertEq(msMinter.getCoverageRatioAt(timestamp3), 0.6e18);   // After second update
+        assertEq(msMinter.getCoverageRatioAt(timestamp3), 0.6e18); // After second update
         assertEq(msMinter.getCoverageRatioAt(timestamp3 + 150), 0.6e18); // Between updates
-        assertEq(msMinter.getCoverageRatioAt(timestamp4), 1e18);     // After third update
-        
+        assertEq(msMinter.getCoverageRatioAt(timestamp4), 1e18); // After third update
+
         // Future timestamp should return latest ratio
         assertEq(msMinter.getCoverageRatioAt(uint48(block.timestamp + 1000)), 1e18);
     }
@@ -2308,7 +2328,7 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         // revert -> amount exceeds cap
         vm.startPrank(alice);
         msUSDToken.approve(address(msMinter), amount);
-        vm.expectRevert(abi.encodeWithSelector(IMainstreetMinter.RedemptionCapExceeded.selector, amount, amount-1));
+        vm.expectRevert(abi.encodeWithSelector(IMainstreetMinter.RedemptionCapExceeded.selector, amount, amount - 1));
         msMinter.requestTokens(address(FRAX), amount);
         vm.stopPrank();
 
@@ -2329,8 +2349,8 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         uint256 amount = 10 ether;
 
         vm.prank(address(msMinter));
-        msUSDToken.mint(alice, amount*2);
-        deal(address(FRAX), address(msMinter), amount*2);
+        msUSDToken.mint(alice, amount * 2);
+        deal(address(FRAX), address(msMinter), amount * 2);
 
         // set redemption cap to amount - 1
         vm.prank(owner);
@@ -2345,7 +2365,9 @@ contract MainstreetMinterTest is BaseSetup, IErrors {
         // revert -> amount exceeds cap
         vm.startPrank(alice);
         msUSDToken.approve(address(msMinter), amount);
-        vm.expectRevert(abi.encodeWithSelector(IMainstreetMinter.RedemptionCapExceeded.selector, amount+amount, amount));
+        vm.expectRevert(
+            abi.encodeWithSelector(IMainstreetMinter.RedemptionCapExceeded.selector, amount + amount, amount)
+        );
         msMinter.requestTokens(address(FRAX), amount);
         vm.stopPrank();
 

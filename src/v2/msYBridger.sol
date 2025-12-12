@@ -6,9 +6,10 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {UpgraderTimelockUpgradeable} from "../helpers/v2/UpgraderTimelockUpgradeable.sol";
 
 // local imports
-import { OFTCoreUpgradeable } from "../utils/oft/OFTCoreUpgradeable.sol";
+import {OFTCoreUpgradeable} from "../utils/oft/OFTCoreUpgradeable.sol";
 
 /**
  * @title msYBridger
@@ -40,7 +41,7 @@ import { OFTCoreUpgradeable } from "../utils/oft/OFTCoreUpgradeable.sol";
  * - Trusted remote management for authorized satellite endpoints.
  * - Optional caps, pause mechanisms, and rate limiting for risk control.
  */
-contract msYBridger is OwnableUpgradeable, OFTCoreUpgradeable, UUPSUpgradeable {
+contract msYBridger is OwnableUpgradeable, OFTCoreUpgradeable, UUPSUpgradeable, UpgraderTimelockUpgradeable {
     using SafeERC20 for IERC20;
 
     // ---------------
@@ -57,7 +58,6 @@ contract msYBridger is OwnableUpgradeable, OFTCoreUpgradeable, UUPSUpgradeable {
     event DebitFrom(uint16 indexed srcChainId, address indexed recipient, uint256 amount);
     event CreditTo(uint16 indexed dstChainId, address indexed from, uint256 amount);
 
-
     // ------
     // Errors
     // ------
@@ -65,7 +65,11 @@ contract msYBridger is OwnableUpgradeable, OFTCoreUpgradeable, UUPSUpgradeable {
     error ReceivedInvalidAmount(uint256 expected, uint256 received);
     error ZeroAddress();
 
-    
+    modifier onlyTimelockOwner() override {
+        if (msg.sender != owner()) revert OwnableUnauthorizedAccount(msg.sender);
+        _;
+    }
+
     // -----------
     // Constructor
     // -----------
@@ -80,7 +84,6 @@ contract msYBridger is OwnableUpgradeable, OFTCoreUpgradeable, UUPSUpgradeable {
 
         OFT_TOKEN = IERC20(oftToken);
     }
-
 
     // -----------
     // Initializer
@@ -98,16 +101,17 @@ contract msYBridger is OwnableUpgradeable, OFTCoreUpgradeable, UUPSUpgradeable {
         __Ownable_init(initOwner);
         __OFTCore_init(initOwner);
         __UUPSUpgradeable_init();
+        __UpgradeTimelock_init();
     }
 
     // -------
     // Methods
     // -------
 
-    function circulatingSupply() external view returns (uint) {
+    function circulatingSupply() external view returns (uint256) {
         return OFT_TOKEN.totalSupply();
     }
-    
+
     function token() external view returns (address) {
         return address(OFT_TOKEN);
     }
@@ -148,17 +152,17 @@ contract msYBridger is OwnableUpgradeable, OFTCoreUpgradeable, UUPSUpgradeable {
         return amount;
     }
 
-   /**
-    * @notice Pulls `amount` of msY tokens from `from` into the bridger escrow.
-    * @dev Uses balance-delta accounting to support fee-on-transfer or deflationary tokens.
-    * The returned `amountReceived` may be **less** than the requested `amount` if the token
-    * charges transfer fees or applies deflation. Callers should compare and handle mismatch
-    * (e.g., revert with a custom error).
-    *
-    * @param from The address to pull tokens from.
-    * @param amount The nominal amount requested to be transferred into escrow.
-    * @return amountReceived The actual amount received.
-    */
+    /**
+     * @notice Pulls `amount` of msY tokens from `from` into the bridger escrow.
+     * @dev Uses balance-delta accounting to support fee-on-transfer or deflationary tokens.
+     * The returned `amountReceived` may be **less** than the requested `amount` if the token
+     * charges transfer fees or applies deflation. Callers should compare and handle mismatch
+     * (e.g., revert with a custom error).
+     *
+     * @param from The address to pull tokens from.
+     * @param amount The nominal amount requested to be transferred into escrow.
+     * @return amountReceived The actual amount received.
+     */
     function _pullTokens(address from, uint256 amount) internal returns (uint256 amountReceived) {
         uint256 preBal = OFT_TOKEN.balanceOf(address(this));
         OFT_TOKEN.safeTransferFrom(from, address(this), amount);
@@ -168,5 +172,8 @@ contract msYBridger is OwnableUpgradeable, OFTCoreUpgradeable, UUPSUpgradeable {
     /**
      * @dev Inherited from UUPSUpgradeable.
      */
-    function _authorizeUpgrade(address) internal override onlyOwner {}
+    function _authorizeUpgrade(address newImpl) internal override onlyOwner {
+        // will revert unless scheduled and delay passed
+        _checkTimelock(newImpl);
+    }
 }

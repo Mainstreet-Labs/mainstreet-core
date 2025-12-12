@@ -34,7 +34,8 @@ contract msUSDV2Test is BaseSetupV2 {
 
         msUSDV2 instance2 = new msUSDV2(address(1));
 
-        bytes32 slot = keccak256(abi.encode(uint256(keccak256("openzeppelin.storage.Initializable")) - 1))
+        bytes32 slot =
+            keccak256(abi.encode(uint256(keccak256("openzeppelin.storage.Initializable")) - 1))
             & ~bytes32(uint256(0xff));
         vm.store(address(instance1), slot, 0);
         vm.store(address(instance2), slot, 0);
@@ -56,6 +57,9 @@ contract msUSDV2Test is BaseSetupV2 {
         assertNotEq(implementationSlot, bytes32(abi.encode(address(newImplementation))));
 
         vm.prank(owner);
+        msUSDToken.scheduleUpgrade(address(newImplementation));
+        vm.warp(block.timestamp + msMinter.upgradeDelay() + 1);
+        vm.prank(owner);
         msUSDToken.upgradeToAndCall(address(newImplementation), "");
 
         implementationSlot =
@@ -70,6 +74,9 @@ contract msUSDV2Test is BaseSetupV2 {
         vm.expectRevert();
         msUSDToken.upgradeToAndCall(address(newImplementation), "");
 
+        vm.prank(owner);
+        msUSDToken.scheduleUpgrade(address(newImplementation));
+        vm.warp(block.timestamp + msMinter.upgradeDelay() + 1);
         vm.prank(owner);
         msUSDToken.upgradeToAndCall(address(newImplementation), "");
     }

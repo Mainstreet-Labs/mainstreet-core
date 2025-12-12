@@ -5,6 +5,7 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeab
 import {OFTCoreUpgradeable, OFTUpgradeable} from "../utils/oft/OFTUpgradeable.sol";
 import {IOFTCore} from "@layerzerolabs/contracts/token/oft/v1/interfaces/IOFTCore.sol";
 import {ImsUSDV2} from "../interfaces/ImsUSDV2.sol";
+import {UpgraderTimelockUpgradeable} from "../helpers/v2/UpgraderTimelockUpgradeable.sol";
 
 /**
  * @title msUSDV2
@@ -32,13 +33,18 @@ import {ImsUSDV2} from "../interfaces/ImsUSDV2.sol";
  * - Designated minter role for permissioned token issuance from collateral deposits
  * - Supply limit enforcement during minting operations
  */
-contract msUSDV2 is UUPSUpgradeable, OFTUpgradeable, ImsUSDV2 {
+contract msUSDV2 is UUPSUpgradeable, OFTUpgradeable, ImsUSDV2, UpgraderTimelockUpgradeable {
     /// @dev Stores the total supply limit. Total Supply cannot exceed this amount.
     uint256 public supplyLimit;
     /// @dev Stores the address of the `msUSDMinter` contract.
     address public minter;
     /// @dev Stores the address of the `StakedmsUSD` contract.
     address public stakedmsUSD;
+
+    modifier onlyTimelockOwner() override {
+        if (msg.sender != owner()) revert OwnableUnauthorizedAccount(msg.sender);
+        _;
+    }
 
     /**
      * @notice Initializes msUSDV2.
@@ -66,6 +72,7 @@ contract msUSDV2 is UUPSUpgradeable, OFTUpgradeable, ImsUSDV2 {
         __OFT_init(owner, name, symbol);
         supplyLimit = 10_000_000 ether;
         if (initialMint != 0) _mint(address(this), initialMint);
+        __UpgradeTimelock_init();
     }
 
     /// @dev Overrides _update from ERC20Upgradeable.
@@ -117,7 +124,10 @@ contract msUSDV2 is UUPSUpgradeable, OFTUpgradeable, ImsUSDV2 {
     /**
      * @notice Inherited from UUPSUpgradeable.
      */
-    function _authorizeUpgrade(address) internal override onlyOwner {}
+    function _authorizeUpgrade(address newImpl) internal override onlyOwner {
+        // will revert unless scheduled and delay passed
+        _checkTimelock(newImpl);
+    }
 
     function sendFrom(
         address _from,

@@ -10,8 +10,8 @@ import "../../utils/Constants.sol";
 
 /**
  * @title StakedmsUSDCoreTest
- * @notice Unit tests for StakedmsUSD core functionality including upgradeability, ownership, 
- * permissioned functions, and basic configuration. Does not test cooldown, staking/unstaking, 
+ * @notice Unit tests for StakedmsUSD core functionality including upgradeability, ownership,
+ * permissioned functions, and basic configuration. Does not test cooldown, staking/unstaking,
  * or reward distribution mechanics.
  */
 contract StakedmsUSDCoreTest is BaseSetupV2 {
@@ -45,17 +45,12 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
         ERC1967Proxy newProxy = new ERC1967Proxy(
             address(new StakedmsUSD()),
             abi.encodeWithSelector(
-                StakedmsUSD.initialize.selector,
-                address(msUSDToken),
-                admin,
-                owner,
-                "Staked mainstreetUSD",
-                "sMSUSD"
+                StakedmsUSD.initialize.selector, address(msUSDToken), admin, owner, "Staked mainstreetUSD", "sMSUSD"
             )
         );
-        
+
         StakedmsUSD newSmsUSD = StakedmsUSD(address(newProxy));
-        
+
         assertEq(newSmsUSD.owner(), owner);
         assertEq(newSmsUSD.rewarder(), admin);
         assertEq(newSmsUSD.name(), "Staked mainstreetUSD");
@@ -71,14 +66,7 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
         vm.expectRevert(IStakedmsUSD.InvalidZeroAddress.selector);
         new ERC1967Proxy(
             address(implementation),
-            abi.encodeWithSelector(
-                StakedmsUSD.initialize.selector,
-                address(0),
-                admin,
-                owner,
-                "Staked msUSD",
-                "smsUSD"
-            )
+            abi.encodeWithSelector(StakedmsUSD.initialize.selector, address(0), admin, owner, "Staked msUSD", "smsUSD")
         );
 
         // Test zero rewarder
@@ -86,12 +74,7 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
         new ERC1967Proxy(
             address(implementation),
             abi.encodeWithSelector(
-                StakedmsUSD.initialize.selector,
-                address(msUSDToken),
-                address(0),
-                owner,
-                "Staked msUSD",
-                "smsUSD"
+                StakedmsUSD.initialize.selector, address(msUSDToken), address(0), owner, "Staked msUSD", "smsUSD"
             )
         );
 
@@ -100,12 +83,7 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
         new ERC1967Proxy(
             address(implementation),
             abi.encodeWithSelector(
-                StakedmsUSD.initialize.selector,
-                address(msUSDToken),
-                admin,
-                address(0),
-                "Staked msUSD",
-                "smsUSD"
+                StakedmsUSD.initialize.selector, address(msUSDToken), admin, address(0), "Staked msUSD", "smsUSD"
             )
         );
     }
@@ -116,19 +94,18 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
     function testStakedmsUSDIsUpgradeable() public {
         StakedmsUSD newImplementation = new StakedmsUSD();
 
-        bytes32 implementationSlot = vm.load(
-            address(smsUSD), 
-            0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc
-        );
+        bytes32 implementationSlot =
+            vm.load(address(smsUSD), 0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc);
         assertNotEq(implementationSlot, bytes32(abi.encode(address(newImplementation))));
 
         vm.prank(owner);
+        smsUSD.scheduleUpgrade(address(newImplementation));
+        vm.warp(block.timestamp + msMinter.upgradeDelay() + 1);
+        vm.prank(owner);
         smsUSD.upgradeToAndCall(address(newImplementation), "");
 
-        implementationSlot = vm.load(
-            address(smsUSD), 
-            0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc
-        );
+        implementationSlot =
+            vm.load(address(smsUSD), 0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc);
         assertEq(implementationSlot, bytes32(abi.encode(address(newImplementation))));
     }
 
@@ -145,6 +122,9 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
         smsUSD.upgradeToAndCall(address(newImplementation), "");
 
         vm.prank(owner);
+        smsUSD.scheduleUpgrade(address(newImplementation));
+        vm.warp(block.timestamp + msMinter.upgradeDelay() + 1);
+        vm.prank(owner);
         smsUSD.upgradeToAndCall(address(newImplementation), "");
     }
 
@@ -153,10 +133,10 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
     /// @dev Tests that the owner can set a new rewarder address
     function testStakedmsUSDOwnerCanSetRewarder() public {
         assertNotEq(smsUSD.rewarder(), newRewarder);
-        
+
         vm.prank(owner);
         smsUSD.setRewarder(newRewarder);
-        
+
         assertEq(smsUSD.rewarder(), newRewarder);
     }
 
@@ -169,7 +149,7 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
         vm.prank(bob);
         vm.expectRevert();
         smsUSD.setRewarder(newRewarder);
-        
+
         assertEq(smsUSD.rewarder(), admin);
     }
 
@@ -192,10 +172,10 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
     /// @dev Tests that the owner can set a new fee silo address
     function testStakedmsUSDOwnerCanSetFeeSilo() public {
         assertNotEq(smsUSD.feeSilo(), newFeeSilo);
-        
+
         vm.prank(owner);
         smsUSD.setFeeSilo(newFeeSilo);
-        
+
         assertEq(smsUSD.feeSilo(), newFeeSilo);
     }
 
@@ -232,10 +212,10 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
     /// @dev Tests that the owner can set a new silo address
     function testStakedmsUSDOwnerCanSetSilo() public {
         assertNotEq(address(smsUSD.silo()), newSilo);
-        
+
         vm.prank(owner);
         smsUSD.setSilo(newSilo);
-        
+
         assertEq(address(smsUSD.silo()), newSilo);
     }
 
@@ -270,10 +250,10 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
     function testStakedmsUSDOwnerCanSetTaxRate() public {
         uint16 newTaxRate = 100; // 10%
         assertNotEq(smsUSD.taxRate(), newTaxRate);
-        
+
         vm.prank(owner);
         smsUSD.setTaxRate(newTaxRate);
-        
+
         assertEq(smsUSD.taxRate(), newTaxRate);
     }
 
@@ -315,10 +295,10 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
     function testStakedmsUSDOwnerCanSetCooldownDuration() public {
         uint24 newDuration = 8 days;
         assertNotEq(smsUSD.cooldownDuration(), newDuration);
-        
+
         vm.prank(owner);
         smsUSD.setCooldownDuration(newDuration);
-        
+
         assertEq(smsUSD.cooldownDuration(), newDuration);
     }
 
@@ -336,7 +316,7 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
     /// @dev Tests that setCooldownDuration reverts when duration exceeds maximum
     function testStakedmsUSDSetCooldownDurationRevertsOnExcessiveDuration() public {
         uint24 excessiveDuration = smsUSD.MAX_COOLDOWN_DURATION() + 1;
-        
+
         vm.prank(owner);
         vm.expectRevert(IStakedmsUSD.InvalidCooldown.selector);
         smsUSD.setCooldownDuration(excessiveDuration);
@@ -346,7 +326,7 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
     function testStakedmsUSDCanSetCooldownDurationToZero() public {
         vm.prank(owner);
         smsUSD.setCooldownDuration(0);
-        
+
         assertEq(smsUSD.cooldownDuration(), 0);
     }
 
@@ -356,15 +336,15 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
     function testStakedmsUSDOwnerCanRescueTokens() public {
         MockToken rescueToken = new MockToken("Rescue", "RSC", 18, address(this));
         uint256 rescueAmount = 1000 ether;
-        
+
         // Send tokens to the staking contract
         rescueToken.transfer(address(smsUSD), rescueAmount);
         assertEq(rescueToken.balanceOf(address(smsUSD)), rescueAmount);
         assertEq(rescueToken.balanceOf(alice), 0);
-        
+
         vm.prank(owner);
         smsUSD.rescueTokens(address(rescueToken), rescueAmount, alice);
-        
+
         assertEq(rescueToken.balanceOf(address(smsUSD)), 0);
         assertEq(rescueToken.balanceOf(alice), rescueAmount);
     }
@@ -372,7 +352,7 @@ contract StakedmsUSDCoreTest is BaseSetupV2 {
     /// @dev Tests that rescueTokens reverts when called by non-owner
     function testStakedmsUSDOnlyOwnerCanRescueTokens() public {
         MockToken rescueToken = new MockToken("Rescue", "RSC", 18, address(this));
-        
+
         vm.prank(admin);
         vm.expectRevert();
         smsUSD.rescueTokens(address(rescueToken), 100, alice);

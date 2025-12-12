@@ -10,6 +10,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IStakedmsUSD,UserCooldown} from "../interfaces/IStakedmsUSD.sol";
 import {ImsUSDV2} from "../interfaces/ImsUSDV2.sol";
 import {msUSDSilo} from "./msUSDSilo.sol";
+import {UpgraderTimelockUpgradeable} from "../helpers/v2/UpgraderTimelockUpgradeable.sol";
 
 /**
  * @title StakedmsUSD
@@ -41,7 +42,8 @@ contract StakedmsUSD is
     OwnableUpgradeable,
     ReentrancyGuardUpgradeable,
     ERC4626Upgradeable,
-    IStakedmsUSD
+    IStakedmsUSD,
+    UpgraderTimelockUpgradeable
 {
     using SafeERC20 for IERC20;
 
@@ -114,6 +116,12 @@ contract StakedmsUSD is
         _;
     }
 
+    /// @notice ensures owner authorization for timelocked functions
+    modifier onlyTimelockOwner() override {
+        if (msg.sender != owner()) revert OwnableUnauthorizedAccount(msg.sender);
+        _;
+    }
+
     /* ------------- CONSTRUCTOR ------------- */
 
     constructor() {
@@ -141,6 +149,7 @@ contract StakedmsUSD is
         __ERC4626_init(IERC20(_asset));
         __Ownable_init(_owner);
         __ReentrancyGuard_init();
+        __UpgradeTimelock_init();
 
         coverageRatio = 1e18;
         depositsEnabled = true;
@@ -148,7 +157,10 @@ contract StakedmsUSD is
         rewarder = _initialRewarder;
     }
 
-    function _authorizeUpgrade(address) internal override onlyOwner {}
+    function _authorizeUpgrade(address newImpl) internal override onlyOwner {
+        // will revert unless scheduled and delay passed
+        _checkTimelock(newImpl);
+    }
 
     /* ------------- EXTERNAL ------------- */
 
@@ -276,7 +288,7 @@ contract StakedmsUSD is
      * and the user must have assets in cooldown. Transfers assets from silo to receiver.
      * @param receiver Address to send the assets to
      */
-    function unstake(address receiver) nonReentrant external {
+    function unstake(address receiver) external nonReentrant {
         UserCooldown storage userCooldown = cooldowns[msg.sender];
         uint256 assets = userCooldown.underlyingAmount;
 

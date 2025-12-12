@@ -2,8 +2,8 @@
 src = "src"
 out = "out"
 libs = ["lib"]
-solc = "0.8.20"
-evm_version = "cancun"
+solc = "0.8.30"
+evm_version = "prague"
 fs_permissions = [{ access = "read-write", path = "./deployments/"}]
 bytecode_hash = "none"
 optimizer = true
@@ -23,5 +23,10 @@ exclude_lints = [
     "screaming-snake-case-immutable",
     "pascal-case-struct",
     "asm-keccak256",
-    "divide-before-multiply"
+    "divide-before-multiply",
+    "unsafe-typecast",
+    "unused-import",
+    "unaliased-plain-import",
+    "unwrapped-modifier-logic",
+    "named-struct-fields"
 ]
