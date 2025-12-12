@@ -10,7 +10,7 @@ import {UpgraderTimelockUpgradeable} from "../helpers/v2/UpgraderTimelockUpgrade
 /**
  * @title msUSDV2
  * @author Mainstreet Labs
- * @notice The home chain implementation of msUSDV2, a cross-chain synthetic USD stablecoin built on LayerZero's 
+ * @notice The home chain implementation of msUSDV2, a cross-chain synthetic USD stablecoin built on LayerZero's
  * Omnichain Fungible Token (OFT) standard. This contract serves as the primary token contract where the underlying
  * collateral is deposited and msUSD tokens are originally minted through the minter contract. This contract also
  * inherits from Openzepelin's UUPSUpgradeable proxy pattern for future upgrades.
@@ -63,12 +63,10 @@ contract msUSDV2 is UUPSUpgradeable, OFTUpgradeable, ImsUSDV2, UpgraderTimelockU
      * @param symbol Symbol of wrapped token.
      * @param initialMint Initial amount of tokens to mint to this contract.
      */
-    function initialize(
-        address owner,
-        string memory name,
-        string memory symbol,
-        uint256 initialMint
-    ) external initializer {
+    function initialize(address owner, string memory name, string memory symbol, uint256 initialMint)
+        external
+        initializer
+    {
         __OFT_init(owner, name, symbol);
         supplyLimit = 10_000_000 ether;
         if (initialMint != 0) _mint(address(this), initialMint);
@@ -138,34 +136,17 @@ contract msUSDV2 is UUPSUpgradeable, OFTUpgradeable, ImsUSDV2, UpgraderTimelockU
         address _zroPaymentAddress,
         bytes calldata _adapterParams
     ) public payable override(IOFTCore, OFTCoreUpgradeable) {
-        _send(
-            _from,
-            _dstChainId,
-            _toAddress,
-            _amount,
-            _refundAddress,
-            _zroPaymentAddress,
-            _adapterParams
-        );
+        _send(_from, _dstChainId, _toAddress, _amount, _refundAddress, _zroPaymentAddress, _adapterParams);
     }
 
-    function _debitFrom(
-        address _from,
-        uint16,
-        bytes memory,
-        uint256 _amount
-    ) internal override returns (uint256) {
+    function _debitFrom(address _from, uint16, bytes memory, uint256 _amount) internal override returns (uint256) {
         address spender = _msgSender();
         if (_from != spender) _spendAllowance(_from, spender, _amount);
         _transfer(_from, address(this), _amount);
         return _amount;
     }
 
-    function _creditTo(
-        uint16,
-        address _toAddress,
-        uint256 _amount
-    ) internal override returns (uint256) {
+    function _creditTo(uint16, address _toAddress, uint256 _amount) internal override returns (uint256) {
         _transfer(address(this), _toAddress, _amount);
         return _amount;
     }

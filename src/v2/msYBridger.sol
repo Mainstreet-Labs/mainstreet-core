@@ -16,25 +16,25 @@ import {OFTCoreUpgradeable} from "../utils/oft/OFTCoreUpgradeable.sol";
  * @author Mainstreet Labs
  * @notice Bridges StakedmsUSD (msY) tokens between the home chain
  * and satellite chains using LayerZero V1 endpoints.
- * 
+ *
  * @dev The msYBridger holds msY tokens in escrow on the home chain instead of burning them.
  * This design preserves the ERC4626 share price by ensuring that the vault’s
  * totalSupply() and underlying assets remain unchanged even when holders bridge out.
- * 
+ *
  * When tokens are bridged OUT (Home → Satellite):
  * - msYBridger pulls msY from the user and locks it in escrow.
  * - A LayerZero message is sent to the destination chain.
  * - The satellite contract mints wrapped msY tokens (StakedmsUSDSatellite) to the recipient.
- * 
+ *
  * When tokens are bridged IN (Satellite → Home):
  * - The satellite burns wrapped msY tokens.
  * - A LayerZero message notifies the msYBridger.
  * - msYBridger releases the equivalent msY amount from escrow to the recipient.
- * 
+ *
  * This model differs from standard OFT (Omnichain Fungible Token) behavior
  * by never minting or burning msY on the home chain — ensuring vault accounting
  * integrity while maintaining omni-chain liquidity via satellite wrappers.
- * 
+ *
  * Key Responsibilities:
  * - Custody and escrow of msY on the home chain.
  * - Safe LayerZero message handling between chains.
@@ -93,9 +93,7 @@ contract msYBridger is OwnableUpgradeable, OFTCoreUpgradeable, UUPSUpgradeable, 
      * @notice This method initializes the msYBridger contract.
      * @param initOwner Initial owner of this contract.
      */
-    function initialize(
-        address initOwner
-    ) external initializer {
+    function initialize(address initOwner) external initializer {
         if (initOwner == address(0)) revert ZeroAddress();
 
         __Ownable_init(initOwner);
@@ -146,7 +144,12 @@ contract msYBridger is OwnableUpgradeable, OFTCoreUpgradeable, UUPSUpgradeable, 
      * @param amount The amount of tokens to be credited (minted).
      * @return The actual amount of tokens that were credited.
      */
-    function _creditTo(uint16 srcChainId, address toAddress, uint256 amount) internal virtual override returns (uint256) {
+    function _creditTo(uint16 srcChainId, address toAddress, uint256 amount)
+        internal
+        virtual
+        override
+        returns (uint256)
+    {
         OFT_TOKEN.safeTransfer(toAddress, amount);
         emit CreditTo(srcChainId, toAddress, amount);
         return amount;

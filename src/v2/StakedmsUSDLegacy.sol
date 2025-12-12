@@ -10,7 +10,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IStakedmsUSD, UserCooldown} from "../interfaces/IStakedmsUSD.sol";
 import {ImsUSDV2} from "../interfaces/ImsUSDV2.sol";
 import {msUSDSilo} from "./msUSDSilo.sol";
-import {UpgraderTimelockUpgradeable} from "../helpers/v2/UpgraderTimelockUpgradeable.sol";
 
 /**
  * @title StakedmsUSD
@@ -42,8 +41,7 @@ contract StakedmsUSD is
     OwnableUpgradeable,
     ReentrancyGuardUpgradeable,
     ERC4626Upgradeable,
-    IStakedmsUSD,
-    UpgraderTimelockUpgradeable
+    IStakedmsUSD
 {
     using SafeERC20 for IERC20;
 
@@ -116,12 +114,6 @@ contract StakedmsUSD is
         _;
     }
 
-    /// @notice ensures owner authorization for timelocked functions
-    modifier onlyTimelockOwner() override {
-        if (msg.sender != owner()) revert OwnableUnauthorizedAccount(msg.sender);
-        _;
-    }
-
     /* ------------- CONSTRUCTOR ------------- */
 
     constructor() {
@@ -149,7 +141,6 @@ contract StakedmsUSD is
         __ERC4626_init(IERC20(_asset));
         __Ownable_init(_owner);
         __ReentrancyGuard_init();
-        __UpgradeTimelock_init();
 
         coverageRatio = 1e18;
         depositsEnabled = true;
@@ -157,10 +148,7 @@ contract StakedmsUSD is
         rewarder = _initialRewarder;
     }
 
-    function _authorizeUpgrade(address newImpl) internal override onlyOwner {
-        // will revert unless scheduled and delay passed
-        _checkTimelock(newImpl);
-    }
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 
     /* ------------- EXTERNAL ------------- */
 
@@ -170,12 +158,7 @@ contract StakedmsUSD is
      */
     function mintRewards(uint256 amount) external nonReentrant onlyRewarder notZero(amount) {
         lastDistributionTimestamp = block.timestamp;
-        if (taxRate != 0 && feeSilo != address(0)) {
-            uint256 fee = amount * taxRate / 1000;
-            ImsUSDV2(asset()).mint(feeSilo, fee);
-            amount = amount - fee;
-        }
-        ImsUSDV2(asset()).mint(address(this), amount);
+        ImsUSDV2(asset()).transferFrom(msg.sender, address(this), amount);
         emit RewardsReceived(amount);
     }
 

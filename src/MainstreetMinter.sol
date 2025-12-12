@@ -27,9 +27,9 @@ import {UpgraderTimelockUpgradeable} from "./helpers/v2/UpgraderTimelockUpgradea
  * @title MainstreetMinter
  * @author Mainstreet Labs
  * @notice A multi-asset collateralization protocol that enables issuance and redemption of msUSD stablecoin.
- * This contract serves as the central hub for managing collateral assets, facilitating price discovery through 
+ * This contract serves as the central hub for managing collateral assets, facilitating price discovery through
  * external oracles, and orchestrating the lifecycle of token minting and redemption requests.
- * 
+ *
  * Key functionality includes:
  * - Asset registry with dynamic whitelisting of supported collaterals
  * - Oracle-driven price feeds for accurate valuation of diverse assets
@@ -37,7 +37,7 @@ import {UpgraderTimelockUpgradeable} from "./helpers/v2/UpgraderTimelockUpgradea
  * - Custodial framework for secure collateral management
  * - Whitelist-based access control for minting and redemption operations (KYC)
  * - Redemption cap management to ensure protocol stability
- * 
+ *
  * The contract implements administrative controls for emergency interventions, allowing
  * for redemption delay modifications and tax rate adjustments to maintain system equilibrium.
  * All operations use non-reentrant patterns and follow rigorous validation protocols to ensure
@@ -95,7 +95,7 @@ contract MainstreetMinter is
     /// @dev Returns whether redemption requests via requestTokens is enabled.
     bool public redemptionsEnabled;
 
-    /// @dev Ensures that the function can only be called by the contract's designated custodian.    
+    /// @dev Ensures that the function can only be called by the contract's designated custodian.
     modifier onlyCustodian() {
         if (msg.sender != custodian) {
             revert NotCustodian(msg.sender);
@@ -170,7 +170,10 @@ contract MainstreetMinter is
      * @param initClaimDelay The initial delay time (in seconds) before which a redemption request becomes claimable.
      * This is a security measure to prevent immediate claims post-request.
      */
-    function initialize(address initOwner, address initAdmin, address initWhitelister, uint48 initClaimDelay) public initializer {
+    function initialize(address initOwner, address initAdmin, address initWhitelister, uint48 initClaimDelay)
+        public
+        initializer
+    {
         initOwner.requireNonZeroAddress();
         initAdmin.requireNonZeroAddress();
         initWhitelister.requireNonZeroAddress();
@@ -238,8 +241,9 @@ contract MainstreetMinter is
             if (amount > canSend) revert InsufficientWithdrawable(canSend, amount);
             emit CustodyTransfer(custodian, asset, amount);
             IERC20(asset).safeTransfer(custodian, amount);
+        } else {
+            revert NoFundsWithdrawable(required, bal);
         }
-        else revert NoFundsWithdrawable(required, bal);
     }
 
     /**
@@ -270,10 +274,7 @@ contract MainstreetMinter is
         emit AssetAdded(asset, oracle);
 
         assets.add(asset);
-        assetInfos[asset] = AssetInfo({
-            oracle: oracle,
-            removed: false
-        });
+        assetInfos[asset] = AssetInfo({oracle: oracle, removed: false});
         activeAssetsLength++;
     }
 
@@ -416,7 +417,12 @@ contract MainstreetMinter is
      * @param asset The collateral token address requested for withdrawal.
      * @param amount The quantity of msUSD to be burned for redemption.
      */
-    function requestTokens(address asset, uint256 amount) external nonReentrant validAsset(asset, false) onlyWhitelisted {
+    function requestTokens(address asset, uint256 amount)
+        external
+        nonReentrant
+        validAsset(asset, false)
+        onlyWhitelisted
+    {
         if (!redemptionsEnabled) revert RedemptionsDisabled();
 
         msUSD.burnFrom(msg.sender, amount);
@@ -425,15 +431,13 @@ contract MainstreetMinter is
         amountAsset = amountAsset - (amountAsset * tax / 1000);
         pendingClaims[asset] += amountAsset;
 
-        if (pendingClaims[asset] > redemptionCap[asset]) revert RedemptionCapExceeded(pendingClaims[asset], redemptionCap[asset]);
+        if (pendingClaims[asset] > redemptionCap[asset]) {
+            revert RedemptionCapExceeded(pendingClaims[asset], redemptionCap[asset]);
+        }
 
         uint48 claimableAfter = clock() + claimDelay;
-        redemptionRequests[msg.sender].push(RedemptionRequest({
-            asset: asset,
-            amount: amountAsset,
-            claimableAfter: claimableAfter,
-            claimed: 0
-        }));
+        redemptionRequests[msg.sender]
+        .push(RedemptionRequest({asset: asset, amount: amountAsset, claimableAfter: claimableAfter, claimed: 0}));
 
         uint256 index = redemptionRequests[msg.sender].length - 1;
         redemptionRequestsByAsset[msg.sender][asset].push(index);
@@ -463,11 +467,11 @@ contract MainstreetMinter is
 
     /**
      * @notice Finalizes the withdrawal of previously requested collateral assets.
-     * @dev Processes all matured redemption requests for the specified asset, 
+     * @dev Processes all matured redemption requests for the specified asset,
      * applies the current coverage ratio to determine final withdrawal amount,
      * transfers the assets to the caller, and updates the global redemption state.
      * Fails if no eligible tokens are available or if contract lacks sufficient balance.
-     * @dev The function also allows for incremental claims via `numIndexes` which can be used in the event 
+     * @dev The function also allows for incremental claims via `numIndexes` which can be used in the event
      * iterating the total number of redemption requests the user has outstanding would require too much gas,
      * the user can claim their redemption requests in increments.
      * @param asset The collateral token address to be withdrawn.
@@ -475,7 +479,7 @@ contract MainstreetMinter is
      * @return totalAmountRequested Total value of asset claimed by msg.sender.
      * @return amountToClaim Actual claimed amount of asset -> The adjusted amount after applying coverage ratio.
      */
-    function claimTokens(address asset, uint256 numIndexes) 
+    function claimTokens(address asset, uint256 numIndexes)
         external
         nonReentrant
         validAsset(asset, true)
@@ -503,7 +507,10 @@ contract MainstreetMinter is
      * @return amountRequested The total value of asset units being claimed.
      * @return amountBeingClaimed The adjusted amount after applying coverage ratio.
      */
-    function _claimTokens(address asset, address user, uint256 numIndexes) internal returns (uint256 amountRequested, uint256 amountBeingClaimed) {
+    function _claimTokens(address asset, address user, uint256 numIndexes)
+        internal
+        returns (uint256 amountRequested, uint256 amountBeingClaimed)
+    {
         uint256 numRequests = getRedemptionRequestsByAssetLength(user, asset);
         uint256 i = firstUnclaimedIndex[user][asset];
 
@@ -512,13 +519,12 @@ contract MainstreetMinter is
 
         while (i < numRequests && iterations < numIndexes) {
             RedemptionRequest storage userRequest = _unsafeRedemptionRequestByAssetAccess(
-                redemptionRequestsByAsset[user][asset],
-                redemptionRequests[user],
-                i
+                redemptionRequestsByAsset[user][asset], redemptionRequests[user], i
             );
             if (timestamp >= userRequest.claimableAfter) {
                 unchecked {
-                    uint256 amountClaimable = userRequest.amount * coverageRatio.upperLookupRecent(userRequest.claimableAfter) / 1e18;
+                    uint256 amountClaimable =
+                        userRequest.amount * coverageRatio.upperLookupRecent(userRequest.claimableAfter) / 1e18;
                     userRequest.claimed = amountClaimable;
 
                     amountRequested += userRequest.amount;
@@ -554,7 +560,9 @@ contract MainstreetMinter is
         onlyAdmin
     {
         uint48 claimableAfter = redemptionRequests[user][index].claimableAfter;
-        emit TokenRequestUpdated(user, asset, index, redemptionRequests[user][index].amount, claimableAfter, newClaimableAfter);
+        emit TokenRequestUpdated(
+            user, asset, index, redemptionRequests[user][index].amount, claimableAfter, newClaimableAfter
+        );
         redemptionRequests[user][index].claimableAfter = newClaimableAfter;
     }
 
@@ -660,9 +668,7 @@ contract MainstreetMinter is
             }
             for (uint256 i; from != to;) {
                 requests[i] = _unsafeRedemptionRequestByAssetAccess(
-                    redemptionRequestsByAsset[user][asset],
-                    redemptionRequests[user],
-                    from
+                    redemptionRequestsByAsset[user][asset], redemptionRequests[user], from
                 );
                 unchecked {
                     ++i;
@@ -823,7 +829,11 @@ contract MainstreetMinter is
      * @return amount The total amount of the supported asset that the user can claim, based on their redemption
      * requests.
      */
-    function _calculateClaimableTokens(address user, address asset, uint256 numIndexes) internal view returns (uint256 amount) {
+    function _calculateClaimableTokens(address user, address asset, uint256 numIndexes)
+        internal
+        view
+        returns (uint256 amount)
+    {
         uint256 numRequests = getRedemptionRequestsByAssetLength(user, asset);
         uint256 i = firstUnclaimedIndex[user][asset];
 
@@ -831,8 +841,9 @@ contract MainstreetMinter is
         uint256 timestamp = clock();
 
         while (i < numRequests && iterations < numIndexes) {
-            RedemptionRequest storage request =
-                _unsafeRedemptionRequestByAssetAccess(redemptionRequestsByAsset[user][asset], redemptionRequests[user], i);
+            RedemptionRequest storage request = _unsafeRedemptionRequestByAssetAccess(
+                redemptionRequestsByAsset[user][asset], redemptionRequests[user], i
+            );
 
             if (timestamp >= request.claimableAfter) {
                 uint256 amountClaimable;
@@ -903,7 +914,10 @@ contract MainstreetMinter is
      * @param amountToMint The collateral amount whose value will be converted to msUSD.
      * @return amountMinted The exact quantity of msUSD tokens credited to the recipient.
      */
-    function _mintTokens(address asset, address recipient, uint256 amountToMint) internal returns (uint256 amountMinted) {
+    function _mintTokens(address asset, address recipient, uint256 amountToMint)
+        internal
+        returns (uint256 amountMinted)
+    {
         uint256 balanceBefore = msUSD.balanceOf(recipient);
         msUSD.mint(recipient, IOracle(assetInfos[asset].oracle).valueOf(amountToMint, maxAge, Math.Rounding.Floor));
         unchecked {

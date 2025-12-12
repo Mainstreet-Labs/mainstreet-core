@@ -49,11 +49,7 @@ contract msUSDV2Satellite is UUPSUpgradeable, OFTUpgradeable, UpgraderTimelockUp
      * @param name Name of wrapped token.
      * @param symbol Symbol of wrapped token.
      */
-    function initialize(
-        address owner,
-        string memory name,
-        string memory symbol
-    ) external initializer {
+    function initialize(address owner, string memory name, string memory symbol) external initializer {
         __OFT_init(owner, name, symbol);
         __UpgradeTimelock_init();
     }
@@ -75,14 +71,6 @@ contract msUSDV2Satellite is UUPSUpgradeable, OFTUpgradeable, UpgraderTimelockUp
         address _zroPaymentAddress,
         bytes calldata _adapterParams
     ) public payable override(IOFTCore, OFTCoreUpgradeable) {
-        _send(
-            _from,
-            _dstChainId,
-            _toAddress,
-            _amount,
-            _refundAddress,
-            _zroPaymentAddress,
-            _adapterParams
-        );
+        _send(_from, _dstChainId, _toAddress, _amount, _refundAddress, _zroPaymentAddress, _adapterParams);
     }
 }
