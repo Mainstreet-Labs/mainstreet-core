@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import {UUPSUpgradeable} from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import {OFTCoreUpgradeable, OFTUpgradeable} from "../utils/oft/OFTUpgradeable.sol";
 import {IOFTCore} from "@layerzerolabs/contracts/token/oft/v1/interfaces/IOFTCore.sol";
+import {UpgraderTimelockUpgradeable} from "../helpers/v2/UpgraderTimelockUpgradeable.sol";
 
 /**
  * @title StakedmsUSDSatellite - Satellite Chain Implementation
@@ -28,7 +29,7 @@ import {IOFTCore} from "@layerzerolabs/contracts/token/oft/v1/interfaces/IOFTCor
  * - LayerZero messaging coordinates with home chain and other satellite contracts
  * - Non-blocking message handling with retry capabilities for failed transfers
  */
-contract StakedmsUSDSatellite is UUPSUpgradeable, OFTUpgradeable {
+contract StakedmsUSDSatellite is UUPSUpgradeable, OFTUpgradeable, UpgraderTimelockUpgradeable {
 
     /**
      * @notice Initializes StakedmsUSDSatellite.
@@ -36,6 +37,12 @@ contract StakedmsUSDSatellite is UUPSUpgradeable, OFTUpgradeable {
      */
     constructor(address lzEndpoint) OFTUpgradeable(lzEndpoint) {
         _disableInitializers();
+    }
+
+    /// @notice ensures owner authorization for timelocked functions
+    modifier onlyTimelockOwner() override {
+        if (msg.sender != owner()) revert OwnableUnauthorizedAccount(msg.sender);
+        _;
     }
 
     /**
@@ -50,12 +57,16 @@ contract StakedmsUSDSatellite is UUPSUpgradeable, OFTUpgradeable {
         string memory symbol
     ) external initializer {
         __OFT_init(owner, name, symbol);
+        __UpgradeTimelock_init();
     }
 
     /**
      * @notice Inherited from UUPSUpgradeable.
      */
-    function _authorizeUpgrade(address) internal override onlyOwner {}
+    function _authorizeUpgrade(address newImpl) internal override onlyOwner {
+        // will revert unless scheduled and delay passed
+        _checkTimelock(newImpl);
+    }
 
     function sendFrom(
         address _from,
