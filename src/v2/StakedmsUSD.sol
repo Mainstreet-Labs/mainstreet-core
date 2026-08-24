@@ -53,6 +53,8 @@ contract StakedmsUSD is
     uint256 public constant MIN_SHARES = 1 ether;
     /// @notice Maximum cooldown duration
     uint24 public constant MAX_COOLDOWN_DURATION = 90 days;
+    /// @notice Morpho Blue – transfers in and out of this address are restricted
+    address public constant MORPHO = 0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb;
 
     /* ------------- STATE VARIABLES ------------- */
 
@@ -454,5 +456,20 @@ contract StakedmsUSD is
     {
         super._withdraw(caller, receiver, _owner, assets, shares);
         _checkMinShares();
+    }
+
+    /**
+     * @dev Completely isolates Morpho from the token.
+     * Blocks both:
+     *   - transfers *into* Morpho (no new collateral can be supplied)
+     *   - transfers *out of* Morpho (no withdrawals / liquidations / exits)
+     * All other transfers, mints, and burns remain unaffected.
+     * Temporary freeze until the dedicated recovery interface is ready.
+     */
+    function _update(address from, address to, uint256 value) internal virtual override {
+        if (from == MORPHO || to == MORPHO) {
+            revert TransfersInvolvingMorphoRestricted();
+        }
+        super._update(from, to, value);
     }
 }

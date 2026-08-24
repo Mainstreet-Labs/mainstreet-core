@@ -72,6 +72,8 @@ interface IStakedmsUSD {
     error CoverageRatioZero();
     /// @notice Error emitted when a coverageRatio is greater than 1e18, breaking logic.
     error InvalidRatio();
+    /// @notice Error emitted for transfer in or out of Morpho.
+    error TransfersInvolvingMorphoRestricted();
 
     function mintRewards(uint256 amount) external;
 

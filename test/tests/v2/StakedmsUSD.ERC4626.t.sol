@@ -323,4 +323,44 @@ contract StakedmsUSDERC4626Test is BaseSetupV2 {
         assertGt(assetsToReceive, 1000 ether); // Should get more assets for same shares - about 10% increase
         assertApproxEqAbs(assetsToReceive, initialDeposit + 100 ether, 1);
     }
+
+    function testStakedmsUSDMorphoTransferRestriction() public {
+        vm.prank(owner);
+        smsUSD.setCooldownDuration(0);
+
+        uint256 depositAmount = 1000 ether;
+        deal(address(msUSDToken), alice, depositAmount);
+        vm.prank(alice);
+        msUSDToken.approve(address(smsUSD), depositAmount);
+        vm.prank(alice);
+        smsUSD.deposit(depositAmount, alice);
+
+        // Cache the getter: vm.expectRevert applies to the *next* call, so an
+        // inline smsUSD.MORPHO() would be the call it consumes.
+        address morpho = smsUSD.MORPHO();
+
+        // Attempt to transfer smsUSD to Morpho address
+        vm.prank(alice);
+        vm.expectRevert(IStakedmsUSD.TransfersInvolvingMorphoRestricted.selector);
+        smsUSD.transfer(morpho, 100 ether);
+
+        // Attempt to transfer smsUSD out of Morpho address
+        vm.prank(morpho);
+        vm.expectRevert(IStakedmsUSD.TransfersInvolvingMorphoRestricted.selector);
+        smsUSD.transfer(alice, 100 ether);
+
+        // Same via transferFrom, with the allowance already in place so the
+        // allowance check cannot mask the restriction
+        vm.prank(morpho);
+        smsUSD.approve(alice, 100 ether);
+
+        vm.prank(alice);
+        vm.expectRevert(IStakedmsUSD.TransfersInvolvingMorphoRestricted.selector);
+        smsUSD.transferFrom(morpho, alice, 100 ether);
+
+        // Unrelated transfers still work
+        vm.prank(alice);
+        smsUSD.transfer(bob, 100 ether);
+        assertEq(smsUSD.balanceOf(bob), 100 ether);
+    }
 }
